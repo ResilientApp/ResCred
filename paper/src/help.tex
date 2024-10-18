@@ -1,0 +1,40 @@
+\section{\LaTeX{} Help}
+
+To compile this document including citations, run \texttt{make}.
+Here is an example citation~\cite{knuth1997art}.
+
+\subsection{Spellcheck}
+
+To spellcheck the document, run \texttt{make spellcheck}.
+The template comes with a spellcheck whitelist for some pesky words that
+are used in computer science, but not recognized by spellcheckers, such as
+``polylogarithmic'', ``undirected'', ``backend'', ``prover'', and ``$n$th''.
+
+Using the template means words are automatically added to your repository and
+tracked under version control in \texttt{data/.aspell.en.pws}.
+
+\subsection{Lorem Ipsum}
+
+Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularized in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+
+\subsection{Unused References}
+
+This template will also detect unused references for you.
+Notice there is an unused reference in \texttt{ref.bib}.
+Run \texttt{make full} and then view \texttt{data/bibunused.txt}.
+
+\subsection{Other Features}
+
+The command \texttt{make full} also generates other metadata and info in \texttt{data}, some of which may be useful.
+This includes a plain-text abstract, ready to upload to a conference submission system:
+
+\begin{abstract}
+This abstract will be extracted as a plain-text to \texttt{data/abstract\_plain.tex}.
+\end{abstract}
+
+You can check out a wordcloud of your document in \texttt{data/wordcloud.png}.
+
+\subsection{Feedback}
+
+If you have any issues using this template, reach out to me by filing an issue at:
+\url{https://github.com/DavisPL/latex-template}.

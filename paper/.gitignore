@@ -1,0 +1,6 @@
+.DS_Store
+build/
+data/*.temp
+# Exclude the aspell personal replacement dictionary, as it is generally
+# useless; the useful file is the whitelist (data/.aspell.en.pws)
+data/.aspell.en.prepl
