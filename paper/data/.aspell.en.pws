@@ -1,4 +1,4 @@
-personal_ws-1.1 en 418 
+personal_ws-1.1 en 430 
 ACM
 AFA
 AFAs
@@ -12,9 +12,11 @@ Alur
 Antimirov
 ArgMax
 ArgZero
+Avni
 BCRE
 BCREs
 BFS
+Bafna
 Boolean
 Booleans
 Borealis
@@ -33,6 +35,7 @@ CSAIL
 CSP
 Caltech
 Concat
+CredRes
 DAGs
 DFA
 DFAs
@@ -80,6 +83,7 @@ NFA
 NFAs
 NPSPACE
 NavyBlue
+Ng
 NonCommercial
 OOPSLA
 PLDI
@@ -89,6 +93,7 @@ PPoPP
 PSPACE
 PTIME
 PageMaker
+Penumarti
 PhDs
 QRE
 QREs
@@ -99,6 +104,7 @@ Rajeev
 Rc
 RedBlue
 RefCell
+ResilientDB
 RiSE
 RxJava
 SCC
@@ -129,13 +135,17 @@ Timely's
 UCSB
 UCSC
 UCSD
+UI
 UIC
 UIUC
 UPenn
 URM
 UnionFind
+Vikram
 WPE
+Weng
 Xeon
+Zhenkai
 acyclic
 acyclicity
 adversarially
@@ -181,6 +191,7 @@ coroutine
 counterintuitive
 cpm
 cras
+cryptographic
 dataflow
 dataflows
 dataplane
@@ -294,6 +305,7 @@ parallelized
 parallelizes
 parallelizing
 performant
+permissioned
 pldi
 pluggable
 png
