@@ -1,4 +1,4 @@
-personal_ws-1.1 en 434 
+personal_ws-1.1 en 437 
 ACM
 AFA
 AFAs
@@ -40,6 +40,7 @@ DAGs
 DFA
 DFAs
 DFS
+DIDs
 DSL
 DSLs
 DSP
@@ -104,6 +105,7 @@ Rajeev
 Rc
 RedBlue
 RefCell
+ResCred
 ResilientDB
 RiSE
 RxJava
@@ -141,6 +143,7 @@ UIUC
 UPenn
 URM
 UnionFind
+Verifiers
 Vikram
 WPE
 Weng

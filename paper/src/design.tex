@@ -1,10 +1,18 @@
 \section{Design}
 
-We propose the following design for CredRes:
+We propose the following design for ResCred: 
 \begin{enumerate}
     \item The Credential Holder, either a natural or legal person, undergoes the certification process as stipulated by the Issuing Body, creates a DID (Decentralized Identifier) if they don’t have one already, and lastly reports to the Issuing Body with their DID.
     \item The Issuing Body (e.g., government agencies, training programs, and educational institutions) maintains replicas of the blockchain, and creates credentials in the form of smart contracts. An Issuing Body can “mint” new credentials for the Credential Holder, vouching for the attainment with its own DID. The nature of credentials as smart contracts also allows for expiry of such contracts to facilitate transparent recertification processes, but only if it is specified in the contract code at the time of issuing.
     \item Lastly, the Credential Holder must accept the credential using their own DID. Once the DID is associated with the credential, employers and other third parties can verify DID ownership using challenge-response mechanisms that request the DID owner to sign a message of the verifier’s choosing.
     \item To reiterate, smart contracts are used throughout the process to manage the lifecycle of certifications—from the initial issuance, to expiry and revocation (with metadata within each transaction for convenient auditing).
 \end{enumerate}
+
+As ease of use is a crucial aspect of certification transparency and public trust, ResCred will provide a web-based UI to facilitate interaction with the blockchain for all parties.
+\begin{itemize}
+    \item Issuing Body: The UI allows the Issuing Body to upload smart contract code to the blockchain, see a list of issued credentials by type, and retroactively revoke issued credentials.
+    \item Credential Holder: The UI allows the Credential Holder to see a list of owned credentials, accept incoming credentials, and link other DIDs (as a means of redundancy in case of lost DID)
+    \item Verifier: The UI allows Verifiers to browse publicly issued credentials by name, search credentials belonging to a specific DID, and transmit an authentication challenge to the Credential Holder.
+\end{itemize}
+
 
