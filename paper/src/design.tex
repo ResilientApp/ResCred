@@ -2,9 +2,9 @@
 
 We propose the following design for CredRes:
 \begin{enumerate}
-    \item Person undergoes the certification process, creates a DID (Decentralized Identifier) if they don’t have one already, and reports to the issuing body.
-    \item Issuing bodies, such as government agencies, training programs, and educational institutions can add credential information to the permissioned blockchain, vouching for the attainment with their own DID.
-    \item Web UI allows credential holders to issue a signed message to employers, proving their identity / ownership. If a user holds multiple credentials across different institutions, they can merge them into one wallet for ease of management.
-    \item Smart contracts can be implemented to confirm whether the credential is valid, expired or revoked and respond with error message/verification status. Employers and third parties initiate verification requests by using smart contracts on the blockchain. This automatically verifies credential’s validity as well as the issuer ID.
+    \item The Credential Holder, either a natural or legal person, undergoes the certification process as stipulated by the Issuing Body, creates a DID (Decentralized Identifier) if they don’t have one already, and lastly reports to the Issuing Body with their DID.
+    \item The Issuing Body (e.g., government agencies, training programs, and educational institutions) maintains replicas of the blockchain, and creates credentials in the form of smart contracts. An Issuing Body can “mint” new credentials for the Credential Holder, vouching for the attainment with its own DID. The nature of credentials as smart contracts also allows for expiry of such contracts to facilitate transparent recertification processes, but only if it is specified in the contract code at the time of issuing.
+    \item Lastly, the Credential Holder must accept the credential using their own DID. Once the DID is associated with the credential, employers and other third parties can verify DID ownership using challenge-response mechanisms that request the DID owner to sign a message of the verifier’s choosing.
+    \item To reiterate, smart contracts are used throughout the process to manage the lifecycle of certifications—from the initial issuance, to expiry and revocation (with metadata within each transaction for convenient auditing).
 \end{enumerate}
 

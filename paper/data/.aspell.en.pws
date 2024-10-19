@@ -1,4 +1,4 @@
-personal_ws-1.1 en 430 
+personal_ws-1.1 en 434 
 ACM
 AFA
 AFAs
@@ -261,6 +261,7 @@ iteratively
 joinChild
 latencies
 lem
+lifecycle
 lin
 linearizability
 linearization
@@ -339,6 +340,7 @@ quadratically
 reachability
 rebalance
 rebalancing
+recertification
 reclock
 recurse
 recurses
@@ -421,6 +423,8 @@ unsatisfiability
 unsatisfiable
 untagged
 util
+verifier
+verifier's
 webpage
 wordcloud
 wordcount
