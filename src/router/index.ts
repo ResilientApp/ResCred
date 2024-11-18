@@ -1,26 +1,30 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
-import Home from '../components/Home.vue';
-import CredentialHolderDashboard from '/home/elpilotoferoz/ECS_189_project/tinker/ecs189f/src/components/CredentialHolderDashboard.vue';
+// router/index.js
+import { createRouter, createWebHistory } from 'vue-router';
+import Dashboard from '../components/Dashboard.vue'; // Adjust path if necessary
+import CredentialForm from '../components/CredentialForm.vue'; // Adjust path if necessary
+import ViewCredential from '../components/CredentialHolderDashboard.vue'; // Adjust path if necessary
+import CreateContract from '../components/CreateContract.vue'; // Adjust path if necessary
+import trackCredential from '../components/TrackStatus.vue'; // Adjust path if necessary
+import Login from '../components/Login.vue'; // Adjust path if necessary
+import CredentialHolderDashboard from '../components/CredentialHolderDashboard.vue';
 
-const routes: Array<RouteRecordRaw> = [
-  {
-    path: '/',
-    name: 'Home',
-    component: Home,
-  },
+
+const routes = [
+  { path: '/', name: 'Dashboard', component: Dashboard },
+  { path: '/login', name: 'Login', component: Login },
+  { path: '/verify', name: 'CredentialForm', component: CredentialForm },
+  { path: '/view', name: 'ViewCredential', component: ViewCredential },
+  { path: '/issue', name: 'CreateContract', component: CreateContract },
+  { path: '/verify-track', name: 'TrackStatus', component: trackCredential },
   {
     path: '/dashboard',
     name: 'CredentialHolderDashboard',
     component: CredentialHolderDashboard,
-  },
-  {
-    path: '/:pathMatch(.*)*', // Catch-all route
-    redirect: '/',
-  },
+},
 ];
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(),
   routes,
 });
 
