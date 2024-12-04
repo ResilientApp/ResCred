@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router';
 import Home from '../components/Home.vue';
+import CredentialHolderDashboard from '/home/elpilotoferoz/ECS_189_project/tinker/ecs189f/src/components/CredentialHolderDashboard.vue';
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -8,7 +9,12 @@ const routes: Array<RouteRecordRaw> = [
     component: Home,
   },
   {
-    path: '/:pathMatch(.*)*',
+    path: '/dashboard',
+    name: 'CredentialHolderDashboard',
+    component: CredentialHolderDashboard,
+  },
+  {
+    path: '/:pathMatch(.*)*', // Catch-all route
     redirect: '/',
   },
 ];

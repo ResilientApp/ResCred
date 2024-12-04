@@ -10,10 +10,142 @@
   padding: 20px;
 }
 
+body {
+  font-family: 'Roboto', sans-serif;
+  color: #ffffff; 
+  margin: 0;
+  padding: 0;
+  line-height: 1.5;
+}
+
+h1, h2, h3 {
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+label {
+  color: #cccccc; /* Lighter color for form labels */
+  font-size: 14px;
+}
+
+button {
+  font-size: 14px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+
+/*ANIMATION STYLES*/
+.credential-card-enter-active, .credential-card-leave-active {
+  transition: all 0.3s ease-in-out;
+}
+
+.credential-card-enter, .credential-card-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}
+/* ANIMATION STYLES END*/
+
+/*CREDENTIAL CARD VUE STYLING BEGGINING*/
+
+.b-card {
+  background-color: rgba(26, 26, 46, 0.9); /* Darker background for cards */
+  color: #ffffff; /* White text */
+  padding: 15px;
+  border-radius: 8px; /* Rounded corners */
+  border: 1px solid #4e4e68; /* Subtle border for cards */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add a shadow */
+  transition: transform 0.2s ease, box-shadow 0.2s ease; /* Smooth hover effect */
+}
+
+/* Hover Effect for Cards */
+.b-card:hover {
+  transform: translateY(-5px); /* Slight lift on hover */
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4); /* Stronger shadow on hover */
+}
+
+/* Heading and Text Styling Inside Cards */
+.b-card h3 {
+  color: #ffffff; /* Brighter white for headings */
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.b-card-text {
+  color: #b0b0b0; /* Lighter gray for additional metadata */
+  font-size: 14px;
+}
+
+/* Buttons Inside Cards */
+.b-button {
+  margin-right: 8px; /* Add spacing between buttons */
+}
+
+.b-button:last-child {
+  margin-right: 0;
+}
+
+/*CREDENTIAL CARD VUE STYLING END*/
+
+
+/*CUSTOM MODAL CSS BEGIN */
+
+.custom-modal .modal-content {
+  background-color: rgba(26, 26, 46, 0.95);
+  color: #f8f9fa;
+  border: 1px solid #4e4e68;
+}
+
+.custom-modal-header {
+  border-bottom: 1px solid #4e4e68;
+}
+
+.custom-modal-footer {
+  border-top: 1px solid #4e4e68;
+}
+
+.custom-modal-body p {
+  color: #cccccc;
+}
+
+/*CUSTOM MODAL CSS END */
+
+.heading_container_dashboard{
+  background-color: #4e4e68;
+  color: #ffffff;
+  padding: 15px 20px;
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  border-bottom: 2px solid #6e6e8c;
+}
+
+.credential-section{
+  margin-top: 20px;
+  padding: 20px;
+  background-color: rgba(26, 26, 46, 0.85);
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.credential-section h2 {
+  color: #ffffff;
+  margin-bottom: 15px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
 .heading {
   color: #f8f9fa;
   text-align: center;
   margin-bottom: 20px;
+}
+
+.sub-heading {
+  color: #f8f9fa;
+  font-size: 1.5rem;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
 }
 
 .form-container {
@@ -171,3 +303,4 @@
   height: 300;
   margin: '0 auto';
 }
+
