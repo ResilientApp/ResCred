@@ -135,7 +135,9 @@ export default defineComponent({
         metadata: "More details",
       }
 
-      verificationRequests.value.push(newReq);
+      if (verificationRequests.value.length < 10) {
+        verificationRequests.value.push(newReq);
+      }
     };
 
     const deleteContract = (id: string) => {
