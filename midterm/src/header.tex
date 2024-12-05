@@ -1,0 +1,64 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Sample header file
+% This can be replaced if wanted, just included for convenience
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Standard packages
+\usepackage{amsmath}
+\usepackage{microtype}
+\usepackage{mdframed}
+
+%% Layout
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{parskip}
+
+%% Tables
+\usepackage{array}
+\usepackage{booktabs}
+% \usepackage{tabularx}
+
+%% Graphics
+\usepackage{graphicx}
+\usepackage[dvipsnames]{xcolor}
+
+%% Hyperlinks
+\usepackage{url}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks,
+    linkcolor={red!40!black},
+    citecolor={blue!50!black},
+    urlcolor={blue!80!black}
+}
+
+% Theorems and cleveref
+% Cleveref must be loaded AFTER amsthm and BEFORE thm definitions.
+% See: https://tex.stackexchange.com/questions/19104/cleveref-with-counters-with-same-name
+\usepackage{amsthm}
+\usepackage{cleveref}
+
+\theoremstyle{definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+
+%% Tikz
+% \usepackage{tikz}
+% \usetikzlibrary{positioning, matrix, fit, arrows, shapes}
+
+%% Algorithms
+% \usepackage{algorithm, caption}
+% \usepackage[noend]{algpseudocode} % (layout for algorithmicx)
+% \usepackage{listings}
+
+%% Symbols
+\usepackage{amssymb}
+% \usepackage{stmaryrd} % Symbols like \llbracket, \rrbracket
+% \usepackage{pifont} % Symbols like \ding
+% \usepackage{relsize} % Large symbols (\mathlarger)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Add custom packages and macros here
+
