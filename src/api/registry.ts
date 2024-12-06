@@ -96,6 +96,7 @@ export class IssuingBodyClient extends RegistryClient {
     name: string,
     domain: string
   ): Promise<ContractAddress> {
+    // TODO: Call Registry.registerIssuingBody
     return "381096eee6c43701c5f065cc0a7f29d5bedfcd6f";
   }
 
@@ -106,6 +107,7 @@ export class IssuingBodyClient extends RegistryClient {
    * @returns Credential ID of the new credential. See {@linkcode getCredById}.
    */
   async createCredential(name: string, expiry = 0): Promise<number> {
+    // TODO: Call Registry.createCredential()
     return 0;
   }
 
@@ -114,6 +116,7 @@ export class IssuingBodyClient extends RegistryClient {
    * @returns credentials associated with issuing body
    */
   async getCredAddrs(): Promise<ContractAddress[]> {
+    // TODO: Call Registry.getCredentials()
     return [
       "1be8e78d765a2e63339fc99a66320db73158a35a",
       "b794caf2b323c4a5b92ee916fbbd82499ec620c5",
@@ -128,6 +131,9 @@ export class IssuingBodyClient extends RegistryClient {
    * @returns
    */
   async getCredById(id: number): Promise<Credential> {
+    // TODO: Call Registry.getIssuingBody() to get IB address
+    // call IssuingBody.getCredentialById() to get Credential address
+    // call Credential.{name,issuingBody,id}()
     return {
       name: "Bachelor of Science",
       address: "1be8e78d765a2e63339fc99a66320db73158a35a",
@@ -144,6 +150,7 @@ export class IssuingBodyClient extends RegistryClient {
   async getCredGrants(
     credentialAddr: ContractAddress
   ): Promise<CredentialGrant[]> {
+    // TODO: Call Credential.getCredGrants()
     return [
       {
         granteeName: "Jane Doe",
@@ -170,6 +177,7 @@ export class IssuingBodyClient extends RegistryClient {
     credential: ContractAddress,
     granteeName: string
   ): Promise<KeyPair & { address: string }> {
+    // TODO: Call Registry.grantCredential()
     // NOTE: Make sure to use {@linkcode generateKeyPair} to
     // create a new address for the recipient.
     // `address` is the address of the CredentialGrant contract instance
@@ -207,6 +215,7 @@ export class CredentialOwnerClient extends RegistryClient {
    * @returns verify requests
    */
   async getOwnerVerifyReqs(): Promise<CredentialOwnerVerifyRequest[]> {
+    // TODO: Call Registry.getOwnerVerifyReqs() then call relevant property view functions
     return [
       {
         credGrantAddr: this.credGrant.address,
@@ -224,20 +233,12 @@ export class CredentialOwnerClient extends RegistryClient {
   }
 
   /**
-   * Get domain name of verifier
-   * @param verifier address of verifier
-   * @returns domain name of verifier
-   */
-  static async getVerifierDomain(verifier: ContractAddress): Promise<string> {
-    return "example.com";
-  }
-
-  /**
    * Approve verification request from given verifier address
    * @param verifier address of verifier
    * @returns true on success
    */
   async approveVerifyReq(verifier: ContractAddress): Promise<boolean> {
+    // TODO: Call Registry.approveVerifyReq()
     return true;
   }
 
@@ -247,6 +248,7 @@ export class CredentialOwnerClient extends RegistryClient {
    * @returns true on success
    */
   async rejectVerifyReq(verifier: ContractAddress): Promise<boolean> {
+    // TODO: Call Registry.rejectVerifyReq()
     return true;
   }
 }
@@ -291,6 +293,7 @@ export class VerifierClient extends RegistryClient {
     name: string,
     domain: string
   ): Promise<ContractAddress> {
+    // TODO: Call Registry.registerVerifier()
     return "6ce616d08abebfd40c1d3440c54f7686e696f92a";
   }
 
@@ -300,6 +303,7 @@ export class VerifierClient extends RegistryClient {
    * @returns true on success
    */
   async sendVerifyReq(credGrantAddr: ContractAddress): Promise<boolean> {
+    // TODO: Call Registry.sendVerifyReq()
     return true;
   }
 
@@ -308,6 +312,7 @@ export class VerifierClient extends RegistryClient {
    * @returns list of a verification requests
    */
   async getVerifierVerifyReqs(): Promise<VerifierVerifyRequest[]> {
+    // TODO: Call Registry.getVerifierVerifyReqs() then call necessary property view functions
     return [
       {
         verifier: this.keyPair.publicKey,
