@@ -199,30 +199,43 @@ const approveCredential = (credential: any) => {
 };
 
 const rejectCredential = (credential: any) => {
+  // Set up the selected credential for rejection
   selectedCredential.value = credential;
   actionType.value = 'reject';
   modalTitle.value = 'Reject Credential';
   modalMessage.value = `Are you sure you want to reject "${credential.name}"?`;
-    if (confirmationModal.value) {
-      confirmationModal.value.isVisible = true;
-    }
+
+  // Open the confirmation modal
+  if (confirmationModal.value) {
+    confirmationModal.value.isVisible = true;
+  }
 };
 
-const handleConfirm = () => {
-    if (actionType.value === 'approve' && selectedCredential.value) {
-      approvedCredentials.value = [
-        ...approvedCredentials.value,
-        { ...selectedCredential.value , status: 'approved' },
-      ];
-      pendingCredentials.value = pendingCredentials.value.filter(
-    (credential) => credential.id !== selectedCredential.value?.id
-);
 
-    }
-    if (confirmationModal.value) {
-      confirmationModal.value.isVisible = false; // Safely close the modal
-    }
-  };
+const handleConfirm = () => {
+  if (actionType.value === 'approve' && selectedCredential.value) {
+    // Approve the credential
+    approvedCredentials.value = [
+      ...approvedCredentials.value,
+      { ...selectedCredential.value, status: 'approved' },
+    ];
+    // Remove from pending list
+    pendingCredentials.value = pendingCredentials.value.filter(
+      (credential) => credential.id !== selectedCredential.value?.id
+    );
+  } else if (actionType.value === 'reject' && selectedCredential.value) {
+    // Remove the rejected credential from the pending list
+    pendingCredentials.value = pendingCredentials.value.filter(
+      (credential) => credential.id !== selectedCredential.value?.id
+    );
+  }
+
+  // Close the confirmation modal
+  if (confirmationModal.value) {
+    confirmationModal.value.isVisible = false;
+  }
+};
+
 
   type Credential = {
   id: number;
