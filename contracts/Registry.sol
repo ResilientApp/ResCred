@@ -88,7 +88,7 @@ contract CredentialGrant {
     }
 
     function getReqIds() public view returns (uint[] memory) {
-        require(msg.sender == registry);
+        require(msg.sender == grantee);
         uint size = pendingRequests.sizeOf();
 
         uint[] memory reqIds = new uint[](size - 1);
@@ -100,6 +100,16 @@ contract CredentialGrant {
             reqIds[idx] = value;
         }
         return reqIds;
+    }
+
+    function getNumReqs() public view returns (uint) {
+        require(msg.sender == registry);
+        return pendingRequests.sizeOf();
+    }
+
+    function getNextReq(uint node) public view returns (bool, uint) {
+        require(msg.sender == registry);
+        return pendingRequests.getNextNode(node);
     }
 
     function addReqId(uint reqId) public {
@@ -224,7 +234,7 @@ contract Verifier {
     address public registry;
 
     mapping(uint => VerifyRequest) requests;
-    uint nextReqIdx; // different from request ID!
+    uint public nextReqIdx; // different from request ID!
 
     constructor(
         uint _id,
@@ -244,6 +254,11 @@ contract Verifier {
         require(msg.sender == registry);
         requests[nextReqIdx] = req;
         nextReqIdx++;
+    }
+
+    function getReqByIdx(uint idx) public view returns (VerifyRequest) {
+        require(msg.sender == registry);
+        return requests[idx];
     }
 
     function getVerifyReqs() public view returns (VerifyRequest[] memory) {
@@ -318,11 +333,15 @@ contract Registry {
     }
 
     function getCredentials() public view returns (Credential[] memory) {
-        require(
-            ibByCreator[msg.sender].id() != 0,
-            "Registered issuing body expected."
-        );
-        return ibByCreator[msg.sender].getCredentials();
+        IssuingBody ib = ibByCreator[msg.sender];
+        require(ib.id() != 0, "Registered issuing body expected.");
+
+        uint nextId = ib.nextId();
+        Credential[] memory creds = new Credential[](nextId - 1);
+        for (uint i = 1; i < ib.nextId(); i++) {
+            creds[i - 1] = ib.getCredentialById(i);
+        }
+        return creds;
     }
 
     function grantCredential(
@@ -345,7 +364,19 @@ contract Registry {
         CredentialGrant grant
     ) public view returns (VerifyRequest[] memory) {
         require(msg.sender == grant.grantee());
-        uint[] memory reqIds = grant.getReqIds();
+
+        uint size = grant.getNumReqs();
+
+        uint[] memory reqIds = new uint[](size - 1);
+        uint node = 0;
+        uint idx = 0;
+        while (true) {
+            (bool nodeExists, uint value) = grant.getNextReq(node);
+            if (!nodeExists) break;
+            reqIds[idx] = value;
+        }
+
+        // uint[] memory reqIds = grant.getReqIds();
         VerifyRequest[] memory reqs = new VerifyRequest[](reqIds.length);
         for (uint i = 0; i < reqIds.length; i++) {
             reqs[i] = requests[reqIds[i]];
@@ -411,6 +442,12 @@ contract Registry {
     {
         Verifier verifier = verifierByCreator[msg.sender];
         require(verifier.id() != 0);
-        return verifier.getVerifyReqs();
+
+        uint nextReqIdx = verifier.nextReqIdx();
+        VerifyRequest[] memory reqs = new VerifyRequest[](nextReqIdx);
+        for (uint i = 0; i < nextReqIdx; i++) {
+            reqs[i] = verifier.getReqByIdx(i);
+        }
+        return reqs;
     }
 }
