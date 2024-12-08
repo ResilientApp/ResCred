@@ -54,19 +54,19 @@ button {
   padding: 15px;
   border-radius: 8px; /* Rounded corners */
   border: 1px solid #4e4e68; /* Subtle border for cards */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add a shadow */
-  transition: transform 0.2s ease, box-shadow 0.2s ease; /* Smooth hover effect */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Adds a shadow */
+  transition: transform 0.2s ease, box-shadow 0.2s ease; 
 }
 
 /* Hover Effect for Cards */
 .b-card:hover {
-  transform: translateY(-5px); /* Slight lift on hover */
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4); /* Stronger shadow on hover */
+  transform: translateY(-5px); 
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4); 
 }
 
-/* Heading and Text Styling Inside Cards */
+
 .b-card h3 {
-  color: #ffffff; /* Brighter white for headings */
+  color: #ffffff; 
   font-size: 18px;
   font-weight: bold;
 }
@@ -78,7 +78,7 @@ button {
 
 /* Buttons Inside Cards */
 .b-button {
-  margin-right: 8px; /* Add spacing between buttons */
+  margin-right: 8px; 
 }
 
 .b-button:last-child {
