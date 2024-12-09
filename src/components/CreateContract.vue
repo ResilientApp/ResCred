@@ -261,7 +261,7 @@ export default defineComponent({
     const grantCredentials = async () => {
       if (!credential.value?.name || !expiration.value) return;
 
-      const newCred = await issuingBody.value?.grantCredential(credential.value?.name, recipient.value);
+      const newCred = await issuingBody.value?.grantCredential(credential.value.address, recipient.value, expiration.value);
       if (!newCred?.address) return;
 
       credentialGrantees.value.push({ name: credential.value.name, granteeName: recipient.value, address: newCred?.address, credentialAddr: credential.value.address, expiry: expiration.value });
