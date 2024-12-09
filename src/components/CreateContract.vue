@@ -30,6 +30,78 @@
       </div>
     </div>
 
+    <div v-if="showCredModal" class="modal-b d-flex justify-content-center align-items-center">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Important</h5>
+          </div>
+          <div class="modal-body">
+            <p>Send the following information to the recipient via a secure channel</p>
+
+            <div class="mb-1">
+              <div class="d-flex align-items-center">
+                <label class="form-label me-2 mb-0 text-nowrap"><strong>Public Key:</strong></label>
+                <p class="form-control-plaintext text-truncate mb-0" id="publicKey">{{ credModal?.publicKey }}</p>
+                <button v-if="!publicKeyCopied" class="btn btn-outline-secondary btn-sm ms-2"
+                  @click="copyToClipboard(credModal?.publicKey!, 'publicKeyCopied')">
+                  Copy
+                </button>
+                <span v-if="publicKeyCopied" class="ms-2 text-success">Copied!</span>
+              </div>
+            </div>
+
+            <div class="mb-1">
+              <div class="d-flex align-items-center">
+                <label class="form-label me-2 mb-0 text-nowrap"><strong>Private Key:</strong></label>
+                <p class="form-control-plaintext text-truncate mb-0" :class="{ 'blurred': !showPrivateKey }"
+                  id="privateKey">
+                  {{ showPrivateKey ? credModal?.privateKey : '••••••••••••••••••••••••••••••••' }}
+                </p>
+                <button class="btn btn-outline-secondary btn-sm ms-2" @click="togglePrivateKeyVisibility">
+                  {{ showPrivateKey ? 'Hide' : 'Show' }}
+                </button>
+                <button v-if="!privateKeyCopied" class="btn btn-outline-secondary btn-sm ms-2"
+                  @click="copyToClipboard(credModal?.privateKey!, 'privateKeyCopied')">
+                  Copy
+                </button>
+                <span v-if="privateKeyCopied" class="ms-2 text-success">Copied!</span>
+              </div>
+            </div>
+
+            <div class="mb-2">
+              <div class="d-flex align-items-center">
+                <label class="form-label me-2 mb-0"><strong>Address:</strong></label>
+                <p class="form-control-plaintext text-truncate mb-0" id="address">{{ credModal?.address }}</p>
+                <button v-if="!addressCopied" class="btn btn-outline-secondary btn-sm ms-2"
+                  @click="copyToClipboard(credModal?.address!, 'addressCopied')">
+                  Copy
+                </button>
+                <span v-if="addressCopied" class="ms-2 text-success">Copied!</span>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <div class="d-flex align-items-center">
+                <button v-if="!allCopied" class="btn btn-outline-secondary btn-sm"
+                  @click="copyToClipboard(JSON.stringify(credModal), 'allCopied')">
+                  Copy All
+                </button>
+                <span v-if="allCopied" class="text-success">Copied!</span>
+              </div>
+            </div>
+
+            <form @submit.prevent="handleCredModalClose">
+              <button type="submit" class="btn btn-primary w-100">
+                Close
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
     <div class="row">
       <div class="col-md-6 mb-4">
         <div class="card">
@@ -95,10 +167,10 @@
               <li class="list-group-item" v-for="cred in credentialGrantees" :key="cred.address">
                 <div class="d-flex justify-content-between align-items-center">
                   <h6 class="mb-0">{{ cred.granteeName }}</h6>
-                  <span class="text-muted small">{{ cred.address }}</span>
+                  <span class="text-muted small truncate-text">{{ cred.address }}</span>
                 </div>
                 <div class="mt-2">
-                  <p class="mb-1"><strong>Credential Address:</strong> {{ cred.credentialAddr }}</p>
+                  <p class="mb-1 truncate-text"><strong>Credential Address:</strong> {{ cred.credentialAddr }}</p>
                   <p class="mb-1"><strong>Credential Name:</strong> {{ cred.name }}</p>
                   <p class="mb-0"><strong>Expiry:</strong> {{ cred.expiry }}</p>
                 </div>
@@ -116,11 +188,11 @@
             <ul class="list-group">
               <li class="list-group-item" v-for="cred in ownedCreds" :key="cred.id">
                 <div class="d-flex justify-content-between align-items-center">
-                  <h6 class="mb-0">{{ cred.name }}</h6>
-                  <span class="text-muted small">{{ cred.address }}</span>
+                  <h6 class="mb-0 me-3">{{ cred.name }}</h6>
+                  <span class="text-muted small truncate-text ms-auto">{{ cred.address }}</span>
                 </div>
                 <div class="mt-2">
-                  <p class="mb-1"><strong>Issuing Body Address:</strong> {{ cred.issuingBodyAddr }}</p>
+                  <p class="mb-1 truncate-text"><strong>Issuing Body Address:</strong> {{ cred.issuingBodyAddr }}</p>
                   <p class="mb-0"><strong>Id:</strong> {{ cred.id }}</p>
                 </div>
               </li>
@@ -147,6 +219,12 @@ export default defineComponent({
       name: string;
     }
 
+    type CredModal = {
+      address: string,
+      publicKey: string,
+      privateKey: string,
+    };
+
     const issuingBody = ref<IssuingBodyClient>();
     const ownedCreds = ref<Credential[]>([]);
     const credentialGrantees = ref<CredGrant[]>([]);
@@ -161,6 +239,17 @@ export default defineComponent({
     const expiration = ref<number>();
 
     const credentialType = ref<string>();
+
+    const showCredModal = ref<boolean>(false);
+    const credModal = ref<CredModal>();
+
+    const showPrivateKey = ref<boolean>(false);
+
+    const publicKeyCopied = ref<boolean>(false);
+    const privateKeyCopied = ref<boolean>(false);
+    const addressCopied = ref<boolean>(false);
+
+    const allCopied = ref<boolean>(false);
 
     onMounted(async () => {
       const kp = localStorage.getItem("keyPair");
@@ -266,9 +355,38 @@ export default defineComponent({
 
       credentialGrantees.value.push({ name: credential.value.name, granteeName: recipient.value, address: newCred?.address, credentialAddr: credential.value.address, expiry: expiration.value });
 
+      const keyPair = await getKeyPair();
+      credModal.value = { address: newCred?.address, publicKey: keyPair.publicKey, privateKey: keyPair.privateKey };
+      showCredModal.value = true;
+
       expiration.value = undefined;
       recipient.value = "";
       credential.value = { name: "", address: "", issuingBodyAddr: "", id: -1 };
+    };
+
+    const handleCredModalClose = () => {
+      credModal.value = { address: "", publicKey: "", privateKey: "" };
+      showCredModal.value = false;
+    }
+
+    const togglePrivateKeyVisibility = () => {
+      showPrivateKey.value = !showPrivateKey.value;
+    };
+
+    const copyToClipboard = (value: string, key: string) => {
+      navigator.clipboard.writeText(value).then(() => {
+        if (key === 'publicKeyCopied') publicKeyCopied.value = true;
+        if (key === 'privateKeyCopied') privateKeyCopied.value = true;
+        if (key === 'addressCopied') addressCopied.value = true;
+        if (key === 'allCopied') allCopied.value = true;
+
+        setTimeout(() => {
+          if (key === 'publicKeyCopied') publicKeyCopied.value = false;
+          if (key === 'privateKeyCopied') privateKeyCopied.value = false;
+          if (key === 'addressCopied') addressCopied.value = false;
+          if (key === 'allCopied') allCopied.value = false;
+        }, 1000);
+      });
     };
 
     const createCredentialType = async () => {
@@ -294,9 +412,19 @@ export default defineComponent({
       recipient,
       expiration,
       credentialType,
+      showCredModal,
+      credModal,
+      showPrivateKey,
+      publicKeyCopied,
+      privateKeyCopied,
+      addressCopied,
+      allCopied,
       handleRegisterIssuingBody,
       grantCredentials,
       createCredentialType,
+      handleCredModalClose,
+      copyToClipboard,
+      togglePrivateKeyVisibility
     };
   },
 });
@@ -337,5 +465,19 @@ export default defineComponent({
 
 .title {
   color: white;
+}
+
+.truncate-text {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.blurred {
+  filter: blur(6px);
+  user-select: none;
+  cursor: pointer;
 }
 </style>
