@@ -1,7 +1,7 @@
 \section{Technology Stack}
 \begin{enumerate}
     \item Web Application: Typescript, CSS, Vue, Vite 
-    \item Backend: ResilientDb GraphQL server, Solidity
+    \item Backend: ResilientDB GraphQL server, Solidity
     \item Database: Powered by ResilientDB Smart Contract Service
 \end{enumerate}
 
@@ -49,7 +49,12 @@ part. For instance, \verb|AddressManager::CreateContractAddress(const Address&)|
 nonce when creating contract addresses, which causes an address to only be able to deploy one
 contract; we fixed this by using \verb|rand()| as a nonce. Also as mentioned earlier, the smart
 contract service does not support the EVM ABI fully, which means we cannot access string parameters
-natively. Supporting strings would require a \textbf{HERE}.
+natively. 
+
+One other particular problem we faced was the lack of \verb|array| support. The GraphQL backend does
+not allow for any types to be passed in as parameters or returned except for basic primitives. This
+forced us to find a creative method of passing back a list of contracts from the backend through the
+usage of ID numbers, which are of type \verb|uint256|.
 
 We believe that the eEVM implementation used by ResilientDB is inherently flawed and incomplete, and it should be replaced with a more updated version of EVM as soon as possible in consideration of the longevity of ResilientDB—soon \verb|solc| will not be able to target EVM specs older than Constantinople.
 

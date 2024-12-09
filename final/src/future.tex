@@ -5,3 +5,16 @@ In fact, any future projects considering planning to utilize the SmartContract C
 making their project on modifying, updating, and documenting SmartContract.
 From our experience interacting and working with the current SmartContract interface, we have found
 some significant flaws as mentioned in \autoref{ssec:Roadblocks}.
+
+Regarding this specific project, our team believes that we have maximimized our efforts in
+delivering a semi-working deliverable on our original objective of creating a decentralized
+credential storage and verification system. However, there are a number of issues that we have
+discovered along the way that we would \textit{like} to fix but simply have no time to implement
+them. One such item is security. We believe the original smart contract service is not particularly
+resilient to invalid inputs and may have security vulnerabilities within the codebase that might
+allow attackers to forge contracts, defeating the purpose of such a system. That is, of course, not
+mentioning the risk of crashing the server on invalid inputs, forcing us to be very meticulus on
+what inputs we are passing into the CLI. Furthermore, given our
+time constraints this quarter, we actually disabled certain security features to allow our code to
+run more compatibly with the Smart Contract CLI. As such, one direction we would like to bring this
+project to is to secure and harden the Smart Contract CLI and our ResCred system. 
