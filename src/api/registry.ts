@@ -1,6 +1,23 @@
 /* eslint-disable @typescript-eslint/require-await */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
+import { gql, GraphQLClient } from 'graphql-request';
+
+export const server = "10.127.1.2";
+export const port = 80;
+
+interface CreateAccountResult {
+  createAccount: string;
+}
+
+interface DeployContractResult {
+  deployContract: {contractAddress: string};
+}
+
+interface ExecuteContractResult {
+  executeContract: string;
+}
+
 // TODO: remove above when all functions are implemented
 export interface KeyPair {
   publicKey: string;
@@ -27,9 +44,10 @@ export interface CredentialGrant {
 export class RegistryClient {
   constructor(
     protected keyPair: KeyPair,
-    protected server = "127.0.0.1",
-    protected port = 10001
-  ) {}
+    protected server = "10.127.1.2",
+    protected port = 80
+  ) { }
+  static registryAddress = "0xec146da91aedfa127037a693b53049be4c1ea43d";
 
   setServer(server: string, port: number) {
     this.server = server;
@@ -79,10 +97,56 @@ export class IssuingBodyClient extends RegistryClient {
   constructor(
     keyPair: KeyPair,
     readonly address: ContractAddress, // contract address of the IssuingBody
-    server = "127.0.0.1",
-    port = 10001
+    server = "10.127.1.2",
+    port = 80
   ) {
     super(keyPair, server, port);
+  }
+
+  static async createAccount(): Promise<KeyPair> {
+    const document = gql`mutation {
+      createAccount(
+        config: "../resilientdb/service/tools/config/interface/service.config",
+      )
+    }`;
+    const endpoint = `http://${server}:${port}/graphql/`;
+    const client = new GraphQLClient(endpoint);
+    const ret = await client.request(document) as CreateAccountResult;
+    return {publicKey: ret.createAccount, privateKey: "world"};
+  }
+
+  static async createContract(owner: string, name: string, args = ""): Promise<string> {
+    const document = gql`mutation {
+        deployContract(
+          config: "../resilientdb/service/tools/config/interface/service.config",
+          contract: "compiled_contracts/output.json",
+          name: "contracts/Registry.sol:${name}",
+          arguments: "${args}",
+          owner: "${owner}"
+        ) {
+          contractAddress
+        }
+    }`;
+    const endpoint = `http://${server}:${port}/graphql/`;
+    const client = new GraphQLClient(endpoint);
+    const ret = await client.request(document) as DeployContractResult;
+    console.log(ret);
+    return ret.deployContract.contractAddress;
+  }
+
+  static async executeContract(sender: string, contract: string, funcName: string, args: string): Promise<string> {
+    const document = gql`mutation {
+        executeContract(
+          config: "../resilientdb/service/tools/config/interface/service.config",
+          sender: "${sender}",
+          contract: "${contract}",
+          functionName: "${funcName}",
+          arguments: "${args}",
+        )}`;
+    const endpoint = `http://${server}:${port}/graphql/`;
+    const client = new GraphQLClient(endpoint);
+    const result = await client.request(document) as ExecuteContractResult;
+    return result.executeContract;
   }
 
   /**
@@ -92,12 +156,15 @@ export class IssuingBodyClient extends RegistryClient {
    * @returns IssuingBody contract address
    */
   static async registerIssuingBody(
-    keyPair: KeyPair,
     name: string,
-    domain: string
+    domain: string,
+    keyPair: KeyPair,
+    server = "10.127.1.2",
+    port = 80
   ): Promise<ContractAddress> {
     // TODO: Call Registry.registerIssuingBody
-    return "381096eee6c43701c5f065cc0a7f29d5bedfcd6f";
+    const contract = await this.createContract(keyPair.publicKey, "IssuingBody", `${this.registryAddress},'${name}','${domain}'`);
+    return this.executeContract(keyPair.publicKey, this.registryAddress, "registerIssuingBody(address)", contract);
   }
 
   /**
@@ -108,7 +175,9 @@ export class IssuingBodyClient extends RegistryClient {
    */
   async createCredential(name: string, expiry = 0): Promise<number> {
     // TODO: Call Registry.createCredential()
-    return 0;
+    // Testing not needed
+    const contract = await IssuingBodyClient.createContract(this.keyPair.publicKey, "Credential", `${this.address},'${name}',${expiry}`);
+    return parseInt(await IssuingBodyClient.executeContract(this.keyPair.publicKey, this.address, "addCredential(address)", contract), 16);
   }
 
   /**
@@ -117,11 +186,14 @@ export class IssuingBodyClient extends RegistryClient {
    */
   async getCredAddrs(): Promise<ContractAddress[]> {
     // TODO: Call Registry.getCredentials()
-    return [
-      "1be8e78d765a2e63339fc99a66320db73158a35a",
-      "b794caf2b323c4a5b92ee916fbbd82499ec620c5",
-      "2087e41408c9f2095ba37bd461d80277d2f44197",
-    ];
+    // Testing definitely not needed
+    const nums = parseInt(await IssuingBodyClient.executeContract(this.keyPair.publicKey, this.address, "nextId()", ""));
+    let ret: ContractAddress[] = [];
+    for(let i = 1; i < nums; i++) {
+      ret.push(await IssuingBodyClient.executeContract(this.keyPair.publicKey, this.address, "getCredentialById(uint256)",`${i}`));
+    }
+
+    return ret;
   }
 
   /**
@@ -134,12 +206,13 @@ export class IssuingBodyClient extends RegistryClient {
     // TODO: Call Registry.getIssuingBody() to get IB address
     // call IssuingBody.getCredentialById() to get Credential address
     // call Credential.{name,issuingBody,id}()
+    const addr = await IssuingBodyClient.executeContract(this.keyPair.publicKey, this.address, "getCredentialById(uint256)",`${id}`);
     return {
-      name: "Bachelor of Science",
-      address: "1be8e78d765a2e63339fc99a66320db73158a35a",
+      name: "Sadoghi", // definitely not testing this one
+      address: addr,
       issuingBodyAddr: this.address,
-      id,
-    };
+      id: id,
+    }
   }
 
   /**
@@ -181,11 +254,8 @@ export class IssuingBodyClient extends RegistryClient {
     // NOTE: Make sure to use {@linkcode generateKeyPair} to
     // create a new address for the recipient.
     // `address` is the address of the CredentialGrant contract instance
-    return {
-      address: "e8c76cfb158ff8c624add0e1924c0fe706826894",
-      publicKey: "e8c76cfb158ff8c624add0e1924c0fe706826894",
-      privateKey: "e8c76cfb158ff8c624add0e1924c0fe706826894",
-    };
+    return IssuingBodyClient.executeContract(this.keyPair.publicKey, this.address, "addGrant(address)",`${credential}`);
+
   }
 }
 
@@ -201,8 +271,8 @@ export class CredentialOwnerClient extends RegistryClient {
   constructor(
     keyPair: KeyPair,
     credGrant: CredentialGrant,
-    server = "127.0.0.1",
-    port = 10001
+    server = "10.127.1.2",
+    port = 80
   ) {
     // NOTE: Each credential grant is a separate key pair. Set the `keyPair`
     // variable as needed when submitting queries or mutations.
@@ -214,22 +284,9 @@ export class CredentialOwnerClient extends RegistryClient {
    * Get all pending verify requests associated with the current credential
    * @returns verify requests
    */
-  async getOwnerVerifyReqs(): Promise<CredentialOwnerVerifyRequest[]> {
+  async getOwnerVerifyReqs(): Promise<CredentialOwnerVerifyRequest> {
     // TODO: Call Registry.getOwnerVerifyReqs() then call relevant property view functions
-    return [
-      {
-        credGrantAddr: this.credGrant.address,
-        verifier: "df7930b1d12e354cfc7f411d3f014eafcecc6b23",
-        verifierName: "Example Inc",
-        verifierDomain: "example.com",
-      },
-      {
-        credGrantAddr: this.credGrant.address,
-        verifier: "711da48058d5435dad701d5779a01cda592627e0",
-        verifierName: "Foobar LLC",
-        verifierDomain: "foobar.com",
-      },
-    ];
+    return IssuingBodyClient.executeContract(this.keyPair.publicKey, this.credGrant, "getReq()","");
   }
 
   /**
@@ -239,7 +296,7 @@ export class CredentialOwnerClient extends RegistryClient {
    */
   async approveVerifyReq(verifier: ContractAddress): Promise<boolean> {
     // TODO: Call Registry.approveVerifyReq()
-    return true;
+    return IssuingBodyClient.executeContract(this.keyPair.publicKey, this.credGrant, "approveVerifyReq(address)",verifier);
   }
 
   /**
@@ -249,7 +306,7 @@ export class CredentialOwnerClient extends RegistryClient {
    */
   async rejectVerifyReq(verifier: ContractAddress): Promise<boolean> {
     // TODO: Call Registry.rejectVerifyReq()
-    return true;
+    return IssuingBodyClient.executeContract(this.keyPair.publicKey, this.credGrant, "rejectVerifyReq(address)",verifier);
   }
 }
 
@@ -277,8 +334,8 @@ export class VerifierClient extends RegistryClient {
   constructor(
     keyPair: KeyPair,
     readonly address: ContractAddress,
-    server = "127.0.0.1",
-    port = 10001
+    server = "10.127.1.2",
+    port = 80
   ) {
     super(keyPair, server, port);
   }
@@ -294,7 +351,7 @@ export class VerifierClient extends RegistryClient {
     domain: string
   ): Promise<ContractAddress> {
     // TODO: Call Registry.registerVerifier()
-    return "6ce616d08abebfd40c1d3440c54f7686e696f92a";
+    return IssuingBodyClient.executeContract(this.keyPair.publicKey, this.address, "registerVerifier(address)",`${this.registryAddress},'${name}','${domain}'`);
   }
 
   /**
@@ -304,7 +361,7 @@ export class VerifierClient extends RegistryClient {
    */
   async sendVerifyReq(credGrantAddr: ContractAddress): Promise<boolean> {
     // TODO: Call Registry.sendVerifyReq()
-    return true;
+    return IssuingBodyClient.executeContract(this.keyPair.publicKey, this.address, "sendVerifyReq(address)",credGrantAddr);
   }
 
   /**
@@ -313,25 +370,12 @@ export class VerifierClient extends RegistryClient {
    */
   async getVerifierVerifyReqs(): Promise<VerifierVerifyRequest[]> {
     // TODO: Call Registry.getVerifierVerifyReqs() then call necessary property view functions
-    return [
-      {
-        verifier: this.keyPair.publicKey,
-        reqId: 0,
-        status: VerifyRequestStatus.Pending,
-        credGrantAddr: "a3cf9f5a94362b6350ac92bcda78630051152bd8",
-        granteeName: "Jane Doe",
-        credentialName: "Bachelor of Science",
-        issuingBodyName: "University of California, Davis",
-      },
-      {
-        verifier: this.keyPair.publicKey,
-        reqId: 1,
-        status: VerifyRequestStatus.Approved,
-        credGrantAddr: "a3cf9f5a94362b6350ac92bcda78630051152bd8",
-        granteeName: "John Smith",
-        credentialName: "Bachelor of Science",
-        issuingBodyName: "University of California, Los Angeles",
-      },
-    ];
+    const nums = parseInt(await IssuingBodyClient.executeContract(this.keyPair.publicKey, this.address, "nextReqIdx()", ""));
+    let ret: VerifierVerifyRequest[] = [];
+    for(let i = 1; i < nums; i++) {
+      ret.push(await IssuingBodyClient.executeContract(this.keyPair.publicKey, this.address, "getReqByIdx(uint256)",`${i}`));
+    }
+
+    return ret;
   }
 }
