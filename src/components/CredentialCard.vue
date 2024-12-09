@@ -1,9 +1,11 @@
 <template>
-  <b-card :title="credential.granteeName" class="mb-3 b-card" sub-title="Holder: {{ credential.holder }}">
+  <b-card :title="credential.granteeName" class="mb-3 b-card" sub-title="Holder: {{ credential.holder }}"
+    bg-variant="primary">
     <b-card-text>
-      Issuer: {{ "Unknown Issuer" }}<br />
-      Domain: {{ "Unknown Domain" }}<br />
-      Address: {{ credential.address.substring(2).replace(/^0+/, '') }}
+      <strong>Credential Grant Address:</strong> {{ credential.address.substring(2).replace(/^0+/, '') }}
+      <strong>Credential Address</strong> {{ credential.credentialAddr.substring(2).replace(/^0+/, '') }}<br />
+      <strong>Expiry:</strong> {{ credential.expiry == 0 ? "never" : new Date(credential.expiry *
+        1000).toLocaleDateString() }}<br />
     </b-card-text>
 
     <!-- Badge for Status -->

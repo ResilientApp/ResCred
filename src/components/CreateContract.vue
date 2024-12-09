@@ -167,10 +167,11 @@
               <li class="list-group-item" v-for="cred in credentialGrantees" :key="cred.address">
                 <div class="d-flex justify-content-between align-items-center">
                   <h6 class="mb-0">{{ cred.granteeName }}</h6>
-                  <span class="text-muted small truncate-text">{{ cred.address }}</span>
+                  <span class="text-muted small truncate-text">{{ cred.address.substring(2).replace(/^0+/, '') }}</span>
                 </div>
                 <div class="mt-2">
-                  <p class="mb-1 truncate-text"><strong>Credential Address:</strong> {{ cred.credentialAddr }}</p>
+                  <p class="mb-1 truncate-text"><strong>Credential Address:</strong> {{
+                    cred.credentialAddr.substring(2).replace(/^0+/, '') }}</p>
                   <p class="mb-1"><strong>Credential Name:</strong> {{ cred.name }}</p>
                   <p class="mb-0"><strong>Expiry:</strong> {{ cred.expiry }}</p>
                 </div>
@@ -189,10 +190,12 @@
               <li class="list-group-item" v-for="cred in ownedCreds" :key="cred.id">
                 <div class="d-flex justify-content-between align-items-center">
                   <h6 class="mb-0 me-3">{{ cred.name }}</h6>
-                  <span class="text-muted small truncate-text ms-auto">{{ cred.address }}</span>
+                  <span class="text-muted small truncate-text ms-auto">{{ cred.address.substring(2).replace(/^0+/, '')
+                    }}</span>
                 </div>
                 <div class="mt-2">
-                  <p class="mb-1 truncate-text"><strong>Issuing Body Address:</strong> {{ cred.issuingBodyAddr }}</p>
+                  <p class="mb-1 truncate-text"><strong>Issuing Body Address:</strong> {{
+                    cred.issuingBodyAddr.substring(2).replace(/^0+/, '') }}</p>
                   <p class="mb-0"><strong>Id:</strong> {{ cred.id }}</p>
                 </div>
               </li>

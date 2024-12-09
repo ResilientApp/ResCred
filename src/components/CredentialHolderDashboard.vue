@@ -1,61 +1,54 @@
 <template>
-  <div class="container custom-container">
-    <h1 class="heading"> Credentials</h1>
-    <!-- beggining of Modal for week 2-->
-    <b-modal v-model="showImportModal" title="Import Credential" dialog-class="custom-modal">
-      <b-form @submit.prevent="handleImport">
-        <b-form-group label="Credential Data">
-          <b-form-textarea v-model="importedCredential" required></b-form-textarea>
-        </b-form-group>
-        <b-button type="submit" variant="success">Import</b-button>
-        <b-button variant="secondary" class="ml-2" @click="showImportModal = false">
-          Cancel
-        </b-button>
-      </b-form>
-    </b-modal>
+  <div class="page-container">
+    <div class="form-container">
+      <h1 class="heading"> Credentials</h1>
+      <!-- beggining of Modal for week 2-->
+      <b-modal v-model="showImportModal" title="Import Credential" dialog-class="custom-modal" hide-footer>
+        <b-form @submit.prevent="handleImport">
+          <b-form-group label="Credential Data">
+            <b-form-textarea v-model="importedCredential" required></b-form-textarea>
+          </b-form-group>
+          <b-button type="submit" variant="success">Import</b-button>
+
+        </b-form>
+      </b-modal>
 
 
 
-    <!-- END of Modal for week 2-->
-    <b-container>
-      <section class="credential-section">
-        <!-- TODO: add a refresh button that calls `refreshReq()` -->
-        <div class="button-group">
-          <b-button variant="primary" class="button" @click="refreshReq">Refresh</b-button>
-
-          <b-button variant="primary" class="button" @click="showImportModal = true">
-            Import Credential
-          </b-button>
-        </div>
-        <!-- Pending Section -->
-        <!-- TODO: make it a pending section for req, i.e., make a card for a CredentialOwnerVerifyRequest -->
-        <section class="credential-section" v-if="pendingReq != null">
-          <b-card class="mb-3" header="Verification Request">
-            <p><strong>ID:</strong> {{ pendingReq.id }}</p>
-            <p><strong>Credential Address:</strong> {{ pendingReq.credGrantAddr }}</p>
-            <p><strong>Verifier Name:</strong> {{ pendingReq.verifierName }}</p>
-            <p><strong>Verifier Domain:</strong> {{ pendingReq.verifierDomain }}</p>
-            <b-button variant="success" @click="approveReq()">Approve</b-button>
-            <b-button variant="danger" @click="rejectReq()">Reject</b-button>
-          </b-card>
-        </section>
-      </section>
-      <section class="credential-section" v-if="credential != null"">
-        <!-- Approved Section -->
-        <h2 class=" sub-heading">Your Credential</h2>
-        <transition-group name="credential-card" tag="div" class="b-row">
-          <CredentialCard :credential="credential" />
-          <section class="credential-section" v-if="credential != null">
-            <transition-group name="credential-card" tag="div" class="b-row">
-              <CredentialCard :credential="credential" />
-            </transition-group>
+      <!-- END of Modal for week 2-->
+      <b-container>
+        <section class="credential-section">
+          <div class="button-group">
+            <b-button variant="primary" class="button" @click="refreshReq()"
+              v-if="credential != null">Refresh</b-button>
+            <b-button variant="primary" class="button" @click="showImportModal = true"
+              v-if="credential == null || true">
+              Import Credential
+            </b-button>
+          </div>
+          <!-- Pending Section -->
+          <section class="credential-section" v-if="pendingReq != null">
+            <b-card class="mb-3" header="Verification Request">
+              <p><strong>ID:</strong> {{ pendingReq.id }}</p>
+              <p><strong>Credential Address:</strong> {{ pendingReq.credGrantAddr }}</p>
+              <p><strong>Verifier Name:</strong> {{ pendingReq.verifierName }}</p>
+              <p><strong>Verifier Domain:</strong> {{ pendingReq.verifierDomain }}</p>
+              <b-button variant="success" @click="approveReq()">Approve</b-button>
+              <b-button variant="danger" @click="rejectReq()">Reject</b-button>
+            </b-card>
           </section>
-        </transition-group>
-      </section>
-      <!-- Confirmation Modal -->
-      <ConfirmationModal v-model:isVisible="isModalVisible" :title="modalTitle" :message="modalMessage"
-        :actionType="actionType" :Credential="selectedCredential" @confirm="handleConfirm" />
-    </b-container>
+        </section>
+        <section class="credential-section" v-if="credential != null">
+          <!-- Approved Section -->
+          <transition-group name="credential-card" tag="div" class="b-row">
+            <CredentialCard :credential="credential" />
+          </transition-group>
+        </section>
+        <!-- Confirmation Modal -->
+        <ConfirmationModal v-model:isVisible="isModalVisible" :title="modalTitle" :message="modalMessage"
+          :actionType="actionType" :Credential="selectedCredential" @confirm="handleConfirm" />
+      </b-container>
+    </div>
   </div>
 </template>
 
@@ -66,31 +59,10 @@ import { CredentialGrant, CredentialGrantData, CredentialOwnerClient, Credential
 import ConfirmationModal from './ConfirmationModal.vue';
 import CredentialCard from './CredentialCard.vue';
 
-
 export default defineComponent({
   name: 'CredentialHolderDashboard',
   components: { CredentialCard, ConfirmationModal },
   setup() {
-    // const credentials = ref([
-    //   { id: 1, name: 'Bachelor of Science in Computer Science', holder: 'Alice', issuer: 'University of Tech', domain: 'university.edu', status: 'pending' },
-    //   { id: 2, name: 'Certified Cloud Practitioner', holder: 'Bob', issuer: 'AWS Certification', domain: 'aws.amazon.com', status: 'approved' },
-    //   { id: 3, name: 'Professional Scrum Master', holder: 'Carol', issuer: 'Scrum.org', domain: 'scrum.org', status: 'pending' },
-    // ]);
-    //week 2 modal for import credentials
-
-    // interface CredentialData {
-    //   id: number;
-    //   name: string;
-    //   holder: string;
-    //   issuer: string;
-    //   domain: string;
-    //   status: string;
-    // }
-
-
-    // const encryptCredential = (data: CredentialData, passphrase: string): string => {
-    //   return btoa(`${JSON.stringify(data)}:${passphrase}`);
-    // };
     const client = ref<CredentialOwnerClient | null>(null);
     const credential = ref<CredentialGrant | null>(null);
     const pendingReq = ref<CredentialOwnerVerifyRequest | null>(null);
@@ -98,6 +70,9 @@ export default defineComponent({
     if (credString != null) {
       const cred = JSON.parse(credString) as CredentialGrantData;
       client.value = new CredentialOwnerClient(cred, cred.address);
+      const credentialAddr = localStorage.getItem("credAddr") || ""
+      const expiry = parseInt(localStorage.getItem("expiry") || "0");
+      credential.value = { address: cred.address, credentialAddr, expiry, granteeName: "John Smith" };
     }
 
     const refreshReq = async () => {
@@ -113,12 +88,16 @@ export default defineComponent({
         return;
       }
       showImportModal.value = false;
-      importedCredential.value = "";
       localStorage.setItem("cred", importedCredential.value)
       const cred = JSON.parse(importedCredential.value) as CredentialGrantData;
       client.value = new CredentialOwnerClient(cred, cred.address);
       const credAddr = await RegistryClient.executeContract(cred.publicKey, cred.address, "credential()", "");
-      credential.value = { address: cred.address, credentialAddr: credAddr, expiry: 0, granteeName: "Unknown Name" };
+      const expiry = await RegistryClient.executeContract(cred.publicKey, cred.address, "expiry()", "");
+      localStorage.setItem("credAddr", credAddr)
+      const expiryNum = parseInt(expiry, 16);
+      localStorage.setItem("expiry", `${expiryNum}`)
+      credential.value = { address: cred.address, credentialAddr: credAddr, expiry: expiryNum, granteeName: "John Smith" };
+      importedCredential.value = "";
     };
 
     const approveReq = async () => {
@@ -145,8 +124,6 @@ export default defineComponent({
       }
     };
 
-
-
     const rejectReq = async () => {
       try {
         if (client.value == null) {
@@ -172,23 +149,6 @@ export default defineComponent({
     };
 
     const handleConfirm = () => {
-      // if (actionType.value === 'approve' && selectedCredential.value) {
-      //   // Approve the credential
-      //   approvedCredentials.value = [
-      //     ...approvedCredentials.value,
-      //     { ...selectedCredential.value, status: 'approved' },
-      //   ];
-      //   // Remove from pending list
-      //   pendingCredentials.value = pendingCredentials.value.filter(
-      //     (credential) => credential.id !== selectedCredential.value?.id
-      //   );
-      // } else if (actionType.value === 'reject' && selectedCredential.value) {
-      //   // Remove the rejected credential from the pending list
-      //   pendingCredentials.value = pendingCredentials.value.filter(
-      //     (credential) => credential.id !== selectedCredential.value?.id
-      //   );
-      // }
-
       // Close the confirmation modal
       if (confirmationModal.value) {
         confirmationModal.value.isVisible = false;
@@ -214,8 +174,6 @@ export default defineComponent({
     const isModalVisible = ref(false);
     const confirmationModal = ref<{ isVisible: boolean } | null>(null);
 
-
-
     const openConfirmModal = (action: string, credential: any) => {
       ref(null); // Reference to modal
       console.log('Event Triggered:', action, credential); // Debug Log
@@ -226,6 +184,7 @@ export default defineComponent({
       isModalVisible.value = true;
       console.log('Modal Visibility:', isModalVisible.value); // Debug Log
     };
+
     return {
       // credentials,
       client,
@@ -312,5 +271,61 @@ export default defineComponent({
   transform: scale(1.05);
   /* Slightly enlarge on hover */
   transition: transform 0.3s ease;
+}
+
+.page-container {
+  background-image: url('@/assets/images/bg.svg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.form-container {
+  background-color: rgba(26, 26, 46, 0.9);
+  padding: 30px;
+  border-radius: 8px;
+  border: 1px solid #4e4e68;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.heading {
+  color: #f8f9fa;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.button-group {
+  margin-top: 20px;
+}
+
+.button {
+  background-color: #4e4e68;
+  border-color: #4e4e68;
+  color: #ffffff;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.button img {
+  margin-right: 10px;
+  height: 20px;
+  width: 20px;
+}
+
+.button:hover {
+  background-color: #5e5e7f;
 }
 </style>

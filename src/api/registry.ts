@@ -1,8 +1,6 @@
 import { gql, GraphQLClient } from 'graphql-request';
 
-export const SERVER = "10.127.1.2";
-export const PORT = 80;
-export const ENDPOINT = `http://${SERVER}:${PORT}/graphql/`;
+export const ENDPOINT = `https://rescred.with.zhenkai.dev/graphql/`;
 
 interface CreateAccountResult {
   createAccount: string;
@@ -62,7 +60,7 @@ export class RegistryClient {
     }`;
     const client = new GraphQLClient(ENDPOINT);
     const ret = await client.request(document) as CreateAccountResult;
-    return { publicKey: ret.createAccount, privateKey: "world" };
+    return { publicKey: ret.createAccount, privateKey: ret.createAccount.split('').reverse().join() };
   }
 
   static async deployContract(owner: string, name: string, args = ""): Promise<string> {
