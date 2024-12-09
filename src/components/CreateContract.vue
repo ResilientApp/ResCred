@@ -1,50 +1,28 @@
 <template>
   <div class="container mt-5">
-    <!-- Page Title -->
-    <h1 class="text-center mb-5 display-4">Smart Contract Management</h1>
+    <h1 class="text-center mb-5 title">Smart Contract Management</h1>
 
-    <div class="row">
-      <!-- Create Contract Section -->
-      <div class="col-md-6 mb-5">
-        <div class="card shadow-sm">
-          <div class="card-header bg-primary text-white">
-            <h4>Create Smart Contract</h4>
+    <!-- Modal -->
+    <div v-if="showModal" class="modal-b d-flex justify-content-center align-items-center">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Register Issuing Body</h5>
           </div>
-          <div class="card-body">
-            <form @submit.prevent="createContract">
+          <div class="modal-body">
+            <form @submit.prevent="handleRegisterIssuingBody">
               <div class="mb-3">
-                <label for="contractName" class="form-label">Contract Name</label>
-                <input type="text" id="contractName" v-model="contractName" class="form-control"
-                  placeholder="Enter contract name" required />
+                <label for="issuingBodyName" class="form-label">Issuing Body Name</label>
+                <input type="text" id="issuingBodyName" v-model="issuingBodyName" class="form-control"
+                  placeholder="Enter issuing body name" required />
               </div>
               <div class="mb-3">
-                <label for="constructorParam" class="form-label">Constructor Parameter</label>
-                <input type="text" id="constructorParam" v-model="constructorParam" class="form-control"
-                  placeholder="Enter parameter value" required />
+                <label for="issuingBodyDomain" class="form-label">Issuing Body Domain</label>
+                <input type="text" id="issuingBodyDomain" v-model="issuingBodyDomain" class="form-control"
+                  placeholder="Enter issuing body domain" required />
               </div>
-              <button type="submit" class="btn btn-outline-primary w-100">
-                <i class="fas fa-plus-circle"></i> Create Contract
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      <!-- Issue Credentials Section -->
-      <div class="col-md-6 mb-5">
-        <div class="card shadow-sm">
-          <div class="card-header bg-success text-white">
-            <h4>Issue Credentials</h4>
-          </div>
-          <div class="card-body">
-            <form @submit.prevent="createCred">
-              <div class="mb-3">
-                <label for="credName" class="form-label">Credential Name</label>
-                <input type="text" id="credName" v-model="credName" class="form-control"
-                  placeholder="Enter credential holder name" required />
-              </div>
-              <button type="submit" class="btn btn-outline-success w-100">
-                <i class="fas fa-id-card"></i> Create Credential
+              <button type="submit" class="btn btn-primary w-100">
+                Register
               </button>
             </form>
           </div>
@@ -53,46 +31,98 @@
     </div>
 
     <div class="row">
-      <!-- Owned Contracts Section -->
-      <div class="col-lg-6 mb-5">
-        <div class="card shadow-sm">
-          <div class="card-header bg-info text-white">
-            <h4>Owned Smart Contracts</h4>
+      <div class="col-md-6 mb-4">
+        <div class="card">
+          <div class="card-header">Issue Credentials</div>
+          <div class="card-body">
+            <form @submit.prevent="grantCredentials">
+              <div class="mb-3">
+                <label for="credentialName" class="form-label">Credential Name</label>
+                <select id="credentialName" v-model="credential" class="form-select" required>
+                  <option value="" disabled>Select a credential</option>
+                  <option v-for="cred in ownedCreds" :key="cred.id" :value="cred">
+                    {{ cred.name }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label for="recipient" class="form-label">Recipient</label>
+                <input type="text" id="recipient" v-model="recipient" class="form-control" placeholder="Enter recipient"
+                  required />
+              </div>
+
+              <div class="mb-3">
+                <label for="expiration" class="form-label">Expiration</label>
+                <input type="text" id="expiration" v-model="expiration" class="form-control"
+                  placeholder="Expiration Time" required />
+              </div>
+
+              <button type="submit" class="btn btn-success w-100">
+                Issue Credential
+              </button>
+            </form>
           </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 mb-4">
+        <div class="card">
+          <div class="card-header">Create Credential Type</div>
+          <div class="card-body">
+            <form @submit.prevent="createCredentialType">
+              <div class="mb-3">
+                <label for="typeName" class="form-label">Credential Type Name</label>
+                <input type="text" id="credentialType" v-model="credentialType" class="form-control"
+                  placeholder="Enter credential type name" required />
+              </div>
+              <button type="submit" class="btn btn-info w-100">
+                Create Type
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Issued Credentials -->
+      <div class="col-md-6 mb-4">
+        <div class="card" style="max-height: 400px; overflow-y: auto;">
+          <div class="card-header">Issued Credentials</div>
           <div class="card-body">
             <ul class="list-group">
-              <li class="list-group-item d-flex justify-content-between align-items-center"
-                v-for="contract in ownedContracts" :key="contract.id">
-                <div>
-                  <strong>{{ contract.name }}</strong>
-                  <p class="mb-1 text-muted">Address: {{ contract.address }}</p>
-                  <p class="small text-muted">Metadata: {{ contract.metadata }}</p>
+              <li class="list-group-item" v-for="cred in credentialGrantees" :key="cred.address">
+                <div class="d-flex justify-content-between align-items-center">
+                  <h6 class="mb-0">{{ cred.granteeName }}</h6>
+                  <span class="text-muted small">{{ cred.address }}</span>
                 </div>
-                <button class="btn btn-outline-danger btn-sm" @click="deleteContract(contract.id)">
-                  <i class="fas fa-trash-alt"></i> Delete
-                </button>
+                <div class="mt-2">
+                  <p class="mb-1"><strong>Credential Address:</strong> {{ cred.credentialAddr }}</p>
+                  <p class="mb-1"><strong>Credential Name:</strong> {{ cred.name }}</p>
+                  <p class="mb-0"><strong>Expiry:</strong> {{ cred.expiry }}</p>
+                </div>
               </li>
             </ul>
           </div>
         </div>
       </div>
 
-      <!-- Issued Credentials Section -->
-      <div class="col-lg-6 mb-5">
-        <div class="card shadow-sm">
-          <div class="card-header bg-warning text-dark">
-            <h4>Issued Credentials</h4>
-          </div>
+      <!-- Credential Types -->
+      <div class="col-md-6 mb-4">
+        <div class="card" style="max-height: 400px; overflow-y: auto;">
+          <div class="card-header">Credential Types</div>
           <div class="card-body">
             <ul class="list-group">
-              <li class="list-group-item d-flex justify-content-between align-items-center"
-                v-for="cred in issuedCredentials" :key="cred.id">
-                <div>
-                  <strong>{{ cred.name }}</strong>
+              <li class="list-group-item" v-for="cred in ownedCreds" :key="cred.id">
+                <div class="d-flex justify-content-between align-items-center">
+                  <h6 class="mb-0">{{ cred.name }}</h6>
+                  <span class="text-muted small">{{ cred.address }}</span>
                 </div>
-                <button class="btn btn-outline-danger btn-sm" @click="deleteCred(cred.id)">
-                  <i class="fas fa-trash-alt"></i> Delete
-                </button>
+                <div class="mt-2">
+                  <p class="mb-1"><strong>Issuing Body Address:</strong> {{ cred.issuingBodyAddr }}</p>
+                  <p class="mb-0"><strong>Id:</strong> {{ cred.id }}</p>
+                </div>
               </li>
             </ul>
           </div>
@@ -103,84 +133,200 @@
 </template>
 
 <script lang="ts">
-import { v4 as uuidv4 } from "uuid";
-import { defineComponent, ref } from "vue";
+import { defineComponent, onMounted, ref } from "vue";
+import { type Credential, IssuingBodyClient, type KeyPair } from "../api/registry";
 
 export default defineComponent({
   name: "CreateContract",
   setup() {
-    const contractName = ref("");
-    const constructorParam = ref("");
-    const credName = ref("");
-    const ownedContracts = ref([]);
-    const issuedCredentials = ref([]);
+    type CredGrant = {
+      granteeName: string;
+      expiry: number;
+      address: string;
+      credentialAddr: string;
+      name: string;
+    }
 
-    const deleteContract = (id: string) => {
-      ownedContracts.value = ownedContracts.value.filter(
-        (contract) => contract.id !== id
-      );
-    };
+    const issuingBody = ref<IssuingBodyClient>();
+    const ownedCreds = ref<Credential[]>([]);
+    const credentialGrantees = ref<CredGrant[]>([]);
 
-    const deleteCred = (id: string) => {
-      issuedCredentials.value = issuedCredentials.value.filter(
-        (cred) => cred.id !== id
-      );
-    };
+    const issuingBodyName = ref<string>("");
+    const issuingBodyDomain = ref<string>("");
+    const showModal = ref<boolean>(true);
 
-    const createContract = () => {
-      if (!contractName.value || !constructorParam.value) {
-        alert("All fields are required.");
+    const credential = ref<Credential>();
+    const recipient = ref<string>("");
+
+    const expiration = ref<number>();
+
+    const credentialType = ref<string>();
+
+    onMounted(async () => {
+      const kp = localStorage.getItem("keyPair");
+      if (!kp) return;
+      const keyPair = JSON.parse(kp);
+
+      const issBody = getIssuingBody(keyPair);
+
+      if (issBody) {
+        showModal.value = false;
+        issuingBodyName.value = JSON.parse(issBody).name;
+        issuingBodyDomain.value = JSON.parse(issBody).domain;
+        handleRegisterIssuingBody();
+      }
+    })
+
+    const handleRegisterIssuingBody = async () => {
+      if (!issuingBodyName.value || !issuingBodyDomain.value) {
+        alert("Both fields are required.");
         return;
       }
 
-      ownedContracts.value.push({
-        id: uuidv4(),
-        name: contractName.value,
-        address: "x789...",
-        metadata: constructorParam.value,
-      });
+      const keyPair = await getKeyPair();
+      let issuingBodyAddr = getIssuingBody(keyPair);
 
-      contractName.value = "";
-      constructorParam.value = "";
-    };
-
-    const createCred = () => {
-      if (!credName.value) {
-        alert("Credential Name is required.");
-        return;
+      if (!issuingBodyAddr) {
+        issuingBodyAddr = await IssuingBodyClient.registerIssuingBody(
+          keyPair,
+          issuingBodyName.value,
+          issuingBodyDomain.value
+        );
+        localStorage.setItem(`${keyPair.publicKey}_${keyPair.privateKey}`, JSON.stringify({ addr: issuingBodyAddr, name: issuingBodyName.value, domain: issuingBodyDomain.value }));
       }
 
-      issuedCredentials.value.push({
-        id: uuidv4(),
-        name: credName.value,
-      });
+      issuingBody.value = new IssuingBodyClient(keyPair, issuingBodyAddr);
 
-      credName.value = "";
+      showModal.value = false;
+
+      ownedCreds.value = await getAllCreds(issuingBody.value);
+      credentialGrantees.value = await getAllGrantees(issuingBody.value, ownedCreds.value);
+    };
+
+    const getIssuingBody = (keyPair: KeyPair): string | null => {
+      const issuingBodyAddr = localStorage.getItem(`${keyPair.publicKey}_${keyPair.privateKey}`);
+      return issuingBodyAddr || null;
+    };
+
+    const getAllGrantees = async (issuingBody: IssuingBodyClient, credentials: Credential[]): Promise<CredGrant[]> => {
+      const grantees: CredGrant[] = [];
+
+      for (const cred of credentials) {
+        const grants = await issuingBody.getCredGrants(cred.address);
+
+        for (let i = 0; i < grants.length; i++) {
+          const name = ownedCreds.value.find((val) => val.address === grants[i].credentialAddr);
+          if (!name?.name) continue;
+          const newGrant = { ...grants[i], name: name?.name }
+          grantees.push(newGrant);
+        }
+      }
+
+      return grantees;
+    };
+
+    const getAllCreds = async (issuingBody: IssuingBodyClient): Promise<Credential[]> => {
+      const allAddrs = await issuingBody.getCredAddrs();
+      const allCreds: Array<Credential> = [];
+
+      for (let i = 0; i < allAddrs.length; i++) {
+        const cred = await issuingBody.getCredById(i);
+        allCreds.push(cred);
+      }
+
+      return allCreds;
+    };
+
+    const getKeyPair = async (): Promise<KeyPair> => {
+      const stored = localStorage.getItem("keyPair");
+      let keyPair: KeyPair = { privateKey: "", publicKey: "" };
+
+      if (!stored) {
+        keyPair = await IssuingBodyClient.generateKeyPair();
+        const stringified = JSON.stringify({
+          publicKey: keyPair.publicKey,
+          privateKey: keyPair.privateKey,
+        });
+        localStorage.setItem("keyPair", stringified);
+      } else {
+        keyPair = JSON.parse(stored);
+      }
+
+      return keyPair;
+    };
+
+    const grantCredentials = async () => {
+      if (!credential.value?.name || !expiration.value) return;
+
+      const newCred = await issuingBody.value?.grantCredential(credential.value?.name, recipient.value);
+      if (!newCred?.address) return;
+
+      credentialGrantees.value.push({ name: credential.value.name, granteeName: recipient.value, address: newCred?.address, credentialAddr: credential.value.address, expiry: expiration.value });
+    };
+
+    const createCredentialType = async () => {
+      if (!credentialType.value || !issuingBody.value?.address) return;
+
+      const credId = await issuingBody.value?.createCredential(credentialType.value);
+
+      const credAddress = await issuingBody.value.getCredById(credId);
+
+      ownedCreds.value.push({ name: credentialType.value, issuingBodyAddr: issuingBody.value?.address, id: credId, address: credAddress.address });
     };
 
     return {
-      contractName,
-      constructorParam,
-      credName,
-      ownedContracts,
-      issuedCredentials,
-      createContract,
-      deleteContract,
-      createCred,
-      deleteCred,
+      issuingBody,
+      ownedCreds,
+      credentialGrantees,
+      issuingBodyName,
+      issuingBodyDomain,
+      showModal,
+      credential,
+      recipient,
+      expiration,
+      credentialType,
+      handleRegisterIssuingBody,
+      grantCredentials,
+      createCredentialType,
     };
   },
 });
+
 </script>
 
 <style scoped>
-.card-header {
-  font-size: 1.25rem;
+.modal-b {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1050;
 }
 
-.btn {
+.modal-dialog {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+  width: 90%;
+  padding: 1rem;
+}
+
+.modal-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
+  border-bottom: 1px solid #dee2e6;
+  padding-bottom: 0.5rem;
+}
+
+.modal-body {
+  padding-top: 1rem;
+}
+
+.title {
+  color: white;
 }
 </style>
