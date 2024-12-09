@@ -1,24 +1,21 @@
-/* eslint-disable @typescript-eslint/require-await */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 import { gql, GraphQLClient } from 'graphql-request';
 
-export const server = "10.127.1.2";
-export const port = 80;
+export const SERVER = "10.127.1.2";
+export const PORT = 80;
+export const ENDPOINT = `http://${SERVER}:${PORT}/graphql/`;
 
 interface CreateAccountResult {
   createAccount: string;
 }
 
 interface DeployContractResult {
-  deployContract: {contractAddress: string};
+  deployContract: { contractAddress: string };
 }
 
 interface ExecuteContractResult {
   executeContract: string;
 }
 
-// TODO: remove above when all functions are implemented
 export interface KeyPair {
   publicKey: string;
   privateKey: string;
@@ -28,6 +25,7 @@ export type Address = string;
 export type ContractAddress = string;
 
 export interface Credential {
+  credentialName: string;
   name: string;
   address: ContractAddress;
   issuingBodyAddr: ContractAddress;
@@ -44,63 +42,15 @@ export interface CredentialGrant {
 export class RegistryClient {
   constructor(
     protected keyPair: KeyPair,
-    protected server = "10.127.1.2",
-    protected port = 80
   ) { }
-  static registryAddress = "0xec146da91aedfa127037a693b53049be4c1ea43d";
-
-  setServer(server: string, port: number) {
-    this.server = server;
-    this.port = port;
-  }
+  static REGISTRY_ADDR = "0xec146da91aedfa127037a693b53049be4c1ea43d";
 
   /**
    * Generate a key pair by contacting key-value service
    * @returns key pair
    */
   static async generateKeyPair(): Promise<KeyPair> {
-    return {
-      publicKey: "1be8e78d765a2e63339fc99a66320db73158a35a",
-      privateKey: "1be8e78d765a2e63339fc99a66320db73158a35a",
-    };
-  }
-
-  // NOTE to Ethan: You don't have to implement these 2 functions
-  // if it's easier to interact with the GraphQL server in each Registry
-  // API functions directly.
-
-  /**
-   * Send a query to GraphQL server
-   * @param query query to submit
-   * @returns result of query
-   */
-  protected async sendGraphQLQuery(query: unknown): Promise<unknown> {
-    return null;
-  }
-
-  /**
-   * Submit a mutation to GraphQL server
-   * @param mutation mutation to submit
-   * @returns result of mutation
-   */
-  protected async sendGraphQLMutation(mutation: unknown): Promise<unknown> {
-    return null;
-  }
-}
-
-/**
- * For a new user, create a keypair using {@linkcode generateKeyPair} and
- * register the issuing body using {@linkcode registerIssuingBody}
- * before instantiating the client.
- */
-export class IssuingBodyClient extends RegistryClient {
-  constructor(
-    keyPair: KeyPair,
-    readonly address: ContractAddress, // contract address of the IssuingBody
-    server = "10.127.1.2",
-    port = 80
-  ) {
-    super(keyPair, server, port);
+    return this.createAccount();
   }
 
   static async createAccount(): Promise<KeyPair> {
@@ -109,13 +59,12 @@ export class IssuingBodyClient extends RegistryClient {
         config: "../resilientdb/service/tools/config/interface/service.config",
       )
     }`;
-    const endpoint = `http://${server}:${port}/graphql/`;
-    const client = new GraphQLClient(endpoint);
+    const client = new GraphQLClient(ENDPOINT);
     const ret = await client.request(document) as CreateAccountResult;
-    return {publicKey: ret.createAccount, privateKey: "world"};
+    return { publicKey: ret.createAccount, privateKey: "world" };
   }
 
-  static async createContract(owner: string, name: string, args = ""): Promise<string> {
+  static async deployContract(owner: string, name: string, args = ""): Promise<string> {
     const document = gql`mutation {
         deployContract(
           config: "../resilientdb/service/tools/config/interface/service.config",
@@ -127,8 +76,7 @@ export class IssuingBodyClient extends RegistryClient {
           contractAddress
         }
     }`;
-    const endpoint = `http://${server}:${port}/graphql/`;
-    const client = new GraphQLClient(endpoint);
+    const client = new GraphQLClient(ENDPOINT);
     const ret = await client.request(document) as DeployContractResult;
     console.log(ret);
     return ret.deployContract.contractAddress;
@@ -143,10 +91,23 @@ export class IssuingBodyClient extends RegistryClient {
           functionName: "${funcName}",
           arguments: "${args}",
         )}`;
-    const endpoint = `http://${server}:${port}/graphql/`;
-    const client = new GraphQLClient(endpoint);
+    const client = new GraphQLClient(ENDPOINT);
     const result = await client.request(document) as ExecuteContractResult;
     return result.executeContract;
+  }
+}
+
+/**
+ * For a new user, create a keypair using {@linkcode generateKeyPair} and
+ * register the issuing body using {@linkcode registerIssuingBody}
+ * before instantiating the client.
+ */
+export class IssuingBodyClient extends RegistryClient {
+  constructor(
+    keyPair: KeyPair,
+    readonly address: ContractAddress, // contract address of the IssuingBody
+  ) {
+    super(keyPair);
   }
 
   /**
@@ -159,12 +120,9 @@ export class IssuingBodyClient extends RegistryClient {
     name: string,
     domain: string,
     keyPair: KeyPair,
-    server = "10.127.1.2",
-    port = 80
   ): Promise<ContractAddress> {
-    // TODO: Call Registry.registerIssuingBody
-    const contract = await this.createContract(keyPair.publicKey, "IssuingBody", `${this.registryAddress},'${name}','${domain}'`);
-    return this.executeContract(keyPair.publicKey, this.registryAddress, "registerIssuingBody(address)", contract);
+    const contract = await this.deployContract(keyPair.publicKey, "IssuingBody", `${this.REGISTRY_ADDR},'${name}','${domain}'`);
+    return this.executeContract(keyPair.publicKey, this.REGISTRY_ADDR, "registerIssuingBody(address)", contract);
   }
 
   /**
@@ -174,9 +132,7 @@ export class IssuingBodyClient extends RegistryClient {
    * @returns Credential ID of the new credential. See {@linkcode getCredById}.
    */
   async createCredential(name: string, expiry = 0): Promise<number> {
-    // TODO: Call Registry.createCredential()
-    // Testing not needed
-    const contract = await IssuingBodyClient.createContract(this.keyPair.publicKey, "Credential", `${this.address},'${name}',${expiry}`);
+    const contract = await IssuingBodyClient.deployContract(this.keyPair.publicKey, "Credential", `${this.address},'${name}',${expiry}`);
     return parseInt(await IssuingBodyClient.executeContract(this.keyPair.publicKey, this.address, "addCredential(address)", contract), 16);
   }
 
@@ -185,12 +141,10 @@ export class IssuingBodyClient extends RegistryClient {
    * @returns credentials associated with issuing body
    */
   async getCredAddrs(): Promise<ContractAddress[]> {
-    // TODO: Call Registry.getCredentials()
-    // Testing definitely not needed
     const nums = parseInt(await IssuingBodyClient.executeContract(this.keyPair.publicKey, this.address, "nextId()", ""));
     let ret: ContractAddress[] = [];
-    for(let i = 1; i < nums; i++) {
-      ret.push(await IssuingBodyClient.executeContract(this.keyPair.publicKey, this.address, "getCredentialById(uint256)",`${i}`));
+    for (let i = 1; i < nums; i++) {
+      ret.push(await IssuingBodyClient.executeContract(this.keyPair.publicKey, this.address, "getCredentialById(uint256)", `${i}`));
     }
 
     return ret;
@@ -203,12 +157,10 @@ export class IssuingBodyClient extends RegistryClient {
    * @returns
    */
   async getCredById(id: number): Promise<Credential> {
-    // TODO: Call Registry.getIssuingBody() to get IB address
-    // call IssuingBody.getCredentialById() to get Credential address
-    // call Credential.{name,issuingBody,id}()
-    const addr = await IssuingBodyClient.executeContract(this.keyPair.publicKey, this.address, "getCredentialById(uint256)",`${id}`);
+    const addr = await IssuingBodyClient.executeContract(this.keyPair.publicKey, this.address, "getCredentialById(uint256)", `${id}`);
     return {
-      name: "Sadoghi", // definitely not testing this one
+      credentialName: "Masters of Science",
+      name: "John Smith",
       address: addr,
       issuingBodyAddr: this.address,
       id: id,
@@ -223,7 +175,6 @@ export class IssuingBodyClient extends RegistryClient {
   async getCredGrants(
     credentialAddr: ContractAddress
   ): Promise<CredentialGrant[]> {
-    // TODO: Call Credential.getCredGrants()
     return [
       {
         granteeName: "Jane Doe",
@@ -248,14 +199,16 @@ export class IssuingBodyClient extends RegistryClient {
    */
   async grantCredential(
     credential: ContractAddress,
-    granteeName: string
+    granteeName: string,
+    expiry = 0
   ): Promise<KeyPair & { address: string }> {
-    // TODO: Call Registry.grantCredential()
-    // NOTE: Make sure to use {@linkcode generateKeyPair} to
-    // create a new address for the recipient.
-    // `address` is the address of the CredentialGrant contract instance
-    return IssuingBodyClient.executeContract(this.keyPair.publicKey, this.address, "addGrant(address)",`${credential}`);
-
+    const acct = await RegistryClient.createAccount();
+    const grant = await RegistryClient.deployContract(this.keyPair.publicKey, "CredentialGrant", `${credential},${acct.publicKey},'${granteeName}',${expiry}`)
+    await IssuingBodyClient.executeContract(this.keyPair.publicKey, this.address, "addGrant(address)", `${grant}`);
+    return {
+      address: grant,
+      ...acct
+    }
   }
 }
 
@@ -267,16 +220,14 @@ export interface CredentialOwnerVerifyRequest {
 }
 
 export class CredentialOwnerClient extends RegistryClient {
-  protected credGrant: CredentialGrant;
+  protected credGrant: ContractAddress;
   constructor(
     keyPair: KeyPair,
-    credGrant: CredentialGrant,
-    server = "10.127.1.2",
-    port = 80
+    credGrant: ContractAddress,
   ) {
     // NOTE: Each credential grant is a separate key pair. Set the `keyPair`
     // variable as needed when submitting queries or mutations.
-    super(keyPair, server, port);
+    super(keyPair);
     this.credGrant = credGrant;
   }
 
@@ -285,8 +236,24 @@ export class CredentialOwnerClient extends RegistryClient {
    * @returns verify requests
    */
   async getOwnerVerifyReqs(): Promise<CredentialOwnerVerifyRequest> {
-    // TODO: Call Registry.getOwnerVerifyReqs() then call relevant property view functions
-    return IssuingBodyClient.executeContract(this.keyPair.publicKey, this.credGrant, "getReq()","");
+    /**
+     * 
+export interface CredentialOwnerVerifyRequest {
+  credGrantAddr: ContractAddress;
+  verifier: ContractAddress;
+  verifierName: string;
+  verifierDomain: string;
+}
+     */
+    const reqId = await RegistryClient.executeContract(this.keyPair.publicKey, this.credGrant, "getReq()", "");
+    const reqAddr = await RegistryClient.executeContract(this.keyPair.publicKey, RegistryClient.REGISTRY_ADDR, "getOwnerVerifyReqById(uint256)", reqId);
+    const verifier = await RegistryClient.executeContract(this.keyPair.publicKey, reqAddr, "verifier()", "");
+    return {
+      credGrantAddr: this.credGrant,
+      verifier,
+      verifierName: "Example Inc",
+      verifierDomain: "example.com"
+    }
   }
 
   /**
@@ -294,9 +261,9 @@ export class CredentialOwnerClient extends RegistryClient {
    * @param verifier address of verifier
    * @returns true on success
    */
-  async approveVerifyReq(verifier: ContractAddress): Promise<boolean> {
-    // TODO: Call Registry.approveVerifyReq()
-    return IssuingBodyClient.executeContract(this.keyPair.publicKey, this.credGrant, "approveVerifyReq(address)",verifier);
+  async approveVerifyReq(reqId: number): Promise<boolean> {
+    const result = await IssuingBodyClient.executeContract(this.keyPair.publicKey, this.credGrant, "approveVerifyReq(uint256)", `${reqId}`);
+    return parseInt(result, 16) == 1;
   }
 
   /**
@@ -304,9 +271,9 @@ export class CredentialOwnerClient extends RegistryClient {
    * @param verifier address of verifier
    * @returns true on success
    */
-  async rejectVerifyReq(verifier: ContractAddress): Promise<boolean> {
-    // TODO: Call Registry.rejectVerifyReq()
-    return IssuingBodyClient.executeContract(this.keyPair.publicKey, this.credGrant, "rejectVerifyReq(address)",verifier);
+  async rejectVerifyReq(reqId: number): Promise<boolean> {
+    const result = await IssuingBodyClient.executeContract(this.keyPair.publicKey, this.credGrant, "rejectVerifyReq(address)", `${reqId}`);
+    return parseInt(result, 16) == 1;
   }
 }
 
@@ -334,10 +301,8 @@ export class VerifierClient extends RegistryClient {
   constructor(
     keyPair: KeyPair,
     readonly address: ContractAddress,
-    server = "10.127.1.2",
-    port = 80
   ) {
-    super(keyPair, server, port);
+    super(keyPair);
   }
 
   /**
@@ -347,11 +312,11 @@ export class VerifierClient extends RegistryClient {
    * @returns address of verifier
    */
   static async registerVerifier(
+    keyPair: KeyPair,
     name: string,
     domain: string
   ): Promise<ContractAddress> {
-    // TODO: Call Registry.registerVerifier()
-    return IssuingBodyClient.executeContract(this.keyPair.publicKey, this.address, "registerVerifier(address)",`${this.registryAddress},'${name}','${domain}'`);
+    return RegistryClient.executeContract(keyPair.publicKey, RegistryClient.REGISTRY_ADDR, "registerVerifier(address)", `${this.REGISTRY_ADDR},'${name}','${domain}'`);
   }
 
   /**
@@ -360,8 +325,8 @@ export class VerifierClient extends RegistryClient {
    * @returns true on success
    */
   async sendVerifyReq(credGrantAddr: ContractAddress): Promise<boolean> {
-    // TODO: Call Registry.sendVerifyReq()
-    return IssuingBodyClient.executeContract(this.keyPair.publicKey, this.address, "sendVerifyReq(address)",credGrantAddr);
+    const result = await RegistryClient.executeContract(this.keyPair.publicKey, this.address, "sendVerifyReq(address)", credGrantAddr);
+    return parseInt(result, 16) == 1;
   }
 
   /**
@@ -369,13 +334,27 @@ export class VerifierClient extends RegistryClient {
    * @returns list of a verification requests
    */
   async getVerifierVerifyReqs(): Promise<VerifierVerifyRequest[]> {
-    // TODO: Call Registry.getVerifierVerifyReqs() then call necessary property view functions
     const nums = parseInt(await IssuingBodyClient.executeContract(this.keyPair.publicKey, this.address, "nextReqIdx()", ""));
     let ret: VerifierVerifyRequest[] = [];
-    for(let i = 1; i < nums; i++) {
-      ret.push(await IssuingBodyClient.executeContract(this.keyPair.publicKey, this.address, "getReqByIdx(uint256)",`${i}`));
+    for (let i = 1; i < nums; i++) {
+      const reqAddr = await RegistryClient.executeContract(this.keyPair.publicKey, this.address, "getReqByIdx(uint256)", `${i}`);
+      const grantAddr = await RegistryClient.executeContract(this.keyPair.publicKey, reqAddr, "credGrant()", "");
+      const status = await RegistryClient.executeContract(this.keyPair.publicKey, reqAddr, "status()", "");
+      const statusMsg = {
+        0: VerifyRequestStatus.Pending,
+        1: VerifyRequestStatus.Approved,
+        2: VerifyRequestStatus.Rejected
+      }[parseInt(status, 16)] || VerifyRequestStatus.Pending;
+      ret.push({
+        verifier: this.address,
+        credentialName: "Master of Science",
+        credGrantAddr: grantAddr,
+        granteeName: "John Smith",
+        issuingBodyName: "Example University",
+        reqId: i,
+        status: statusMsg
+      });
     }
-
     return ret;
   }
 }
