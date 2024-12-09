@@ -38,6 +38,8 @@ export interface CredentialGrant {
   credentialAddr: ContractAddress;
 }
 
+export type CredentialGrantData = KeyPair & { address: string };
+
 export class RegistryClient {
   constructor(
     protected keyPair: KeyPair,
@@ -215,6 +217,7 @@ export class IssuingBodyClient extends RegistryClient {
 }
 
 export interface CredentialOwnerVerifyRequest {
+  id: number;
   credGrantAddr: ContractAddress;
   verifier: ContractAddress;
   verifierName: string;
@@ -237,20 +240,12 @@ export class CredentialOwnerClient extends RegistryClient {
    * Get all pending verify requests associated with the current credential
    * @returns verify requests
    */
-  async getOwnerVerifyReqs(): Promise<CredentialOwnerVerifyRequest> {
-    /**
-     * 
-export interface CredentialOwnerVerifyRequest {
-  credGrantAddr: ContractAddress;
-  verifier: ContractAddress;
-  verifierName: string;
-  verifierDomain: string;
-}
-     */
+  async getVerifyReq(): Promise<CredentialOwnerVerifyRequest> {
     const reqId = await RegistryClient.executeContract(this.keyPair.publicKey, this.credGrant, "getReq()", "");
     const reqAddr = await RegistryClient.executeContract(this.keyPair.publicKey, RegistryClient.REGISTRY_ADDR, "getOwnerVerifyReqById(uint256)", reqId);
     const verifier = await RegistryClient.executeContract(this.keyPair.publicKey, reqAddr, "verifier()", "");
     return {
+      id: parseInt(reqId, 16),
       credGrantAddr: this.credGrant,
       verifier,
       verifierName: "Example Inc",
