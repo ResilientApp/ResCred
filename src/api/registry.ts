@@ -64,13 +64,17 @@ export class RegistryClient {
   }
 
   static async deployContract(owner: string, name: string, args = ""): Promise<string> {
+    let ownerHex = owner;
+    if (!ownerHex.startsWith("0x")) {
+      ownerHex = "0x" + ownerHex;
+    }
     const document = gql`mutation {
         deployContract(
           config: "../resilientdb/service/tools/config/interface/service.config",
           contract: "compiled_contracts/output.json",
           name: "ecs189f/contracts/Registry.sol:${name}",
           arguments: "${args}",
-          owner: "${owner}"
+          owner: "${ownerHex}"
         ) {
           contractAddress
         }
