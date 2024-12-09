@@ -1,0 +1,11 @@
+.DS_Store
+build/
+data/*.temp
+data/abstract_plain.tex
+data/bibentries.txt
+data/bibunused.txt
+data/fonts.txt
+data/totals.txt
+# Exclude the aspell personal replacement dictionary, as it is generally
+# useless; the useful file is the whitelist (data/.aspell.en.pws)
+data/.aspell.en.prepl
