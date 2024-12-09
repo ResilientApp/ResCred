@@ -92,7 +92,7 @@ restest2() {
     echo
 }
 
-restest() {
+test-approve() {
     EXEC_OUTPUT="\033[0;37m"
     EXEC_OUTPUT=`tput setaf 3` # yellow
     ATTN=`tput setaf 6` # cyan
@@ -225,7 +225,7 @@ restest() {
     echo
 }
 
-restestrej() {
+test-reject() {
     EXEC_OUTPUT="\033[0;37m"
     EXEC_OUTPUT=`tput setaf 3` # yellow
     ATTN=`tput setaf 6` # cyan
@@ -358,7 +358,7 @@ restestrej() {
     echo
 }
 
-restestsec() {
+test-immutable() {
     EXEC_OUTPUT="\033[0;37m"
     EXEC_OUTPUT=`tput setaf 3` # yellow
     ATTN=`tput setaf 6` # cyan
