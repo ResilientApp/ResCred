@@ -25,7 +25,6 @@ export type Address = string;
 export type ContractAddress = string;
 
 export interface Credential {
-  credentialName: string;
   name: string;
   address: ContractAddress;
   issuingBodyAddr: ContractAddress;
@@ -159,8 +158,7 @@ export class IssuingBodyClient extends RegistryClient {
   async getCredById(id: number): Promise<Credential> {
     const addr = await IssuingBodyClient.executeContract(this.keyPair.publicKey, this.address, "getCredentialById(uint256)", `${id}`);
     return {
-      credentialName: "Masters of Science",
-      name: "John Smith",
+      name: "Masters of Science",
       address: addr,
       issuingBodyAddr: this.address,
       id: id,
