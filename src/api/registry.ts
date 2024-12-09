@@ -68,7 +68,7 @@ export class RegistryClient {
         deployContract(
           config: "../resilientdb/service/tools/config/interface/service.config",
           contract: "compiled_contracts/output.json",
-          name: "contracts/Registry.sol:${name}",
+          name: "ecs189f/contracts/Registry.sol:${name}",
           arguments: "${args}",
           owner: "${owner}"
         ) {
