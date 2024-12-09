@@ -188,9 +188,9 @@ export default defineComponent({
 
       if (!issuingBodyAddr) {
         issuingBodyAddr = await IssuingBodyClient.registerIssuingBody(
-          keyPair,
           issuingBodyName.value,
-          issuingBodyDomain.value
+          issuingBodyDomain.value,
+          keyPair,
         );
         localStorage.setItem(`${keyPair.publicKey}_${keyPair.privateKey}`, JSON.stringify({ addr: issuingBodyAddr, name: issuingBodyName.value, domain: issuingBodyDomain.value }));
       } else {
