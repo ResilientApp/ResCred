@@ -1,6 +1,6 @@
 <template>
+  <div class="container custom-container">
   <h1 class = "heading_container_dashboard"> Credentials</h1>
-  <div class="page-container">
     <!-- beggining of Modal for week 2-->
     <b-modal
   v-model="showImportModal"
@@ -116,25 +116,38 @@ const handleImport = async () => {
     return;
   }
 
-  // Try to parse `importedCredential.value` into a valid `CredentialData`
-  let parsedCredential: CredentialData;
-  try {
-    parsedCredential = JSON.parse(importedCredential.value);
-  } catch (error) {
-    alert('Invalid credential format.');
-    return;
-  }
+  // Construct a CredentialData object
+  const credentialData: CredentialData = {
+    id: Date.now(), // Use a unique ID for now
+    name: importedCredential.value.name || 'Unnamed Credential', // Adjust this based on your structure
+    holder: 'Federico', // Replace with the actual holder name
+    issuer: 'Example Issuer', // Replace with the actual issuer
+    domain: 'example.com', // Replace with the actual domain
+    status: 'pending',
+  };
 
-  const encryptedData = encryptCredential(parsedCredential, passphrase.value);
+  const encryptedData = encryptCredential(credentialData, passphrase.value);
   console.log('Encrypted Credential:', encryptedData);
 
-  await verifyCredential();
+  try {
+    const result = await Registry.importCredential(encryptedData);
+    if (result.success) {
+      alert('Credential imported successfully.');
+      pendingCredentials.value.push(credentialData);
+    } else {
+      alert('Credential import failed: ' + result.message);
+    }
+  } catch (error) {
+    console.error('Error importing credential:', error);
+    alert('An error occurred while importing the credential.');
+  }
 
-  // Close modal and reset fields
   showImportModal.value = false;
-  importedCredential.value = '';
+  importedCredential.value = null;
   passphrase.value = '';
 };
+
+
 
 //END week 2 modal for import credentials
 
@@ -187,29 +200,51 @@ const pendingCredentials = ref([
     status: 'pending',
   },
 ]);
-const approveCredential = (credential: any) => {
-  selectedCredential.value = credential;
-  actionType.value = 'approve';
-  modalTitle.value = 'Approve Credential';
-  modalMessage.value = `Are you sure you want to approve ${credential.name}?`;
 
-  if (confirmationModal.value) {
-    confirmationModal.value.isVisible = true; // Safely access isVisible
+const approveCredential = async (credential: any) => {
+  try {
+    // Simulate using a backend function to approve the credential
+    const result = await Registry.approveReq(credential, 'verifier-address-placeholder');
+    if (result.success) {
+      alert('Credential approved successfully.');
+      // Move the credential to the approved list
+      approvedCredentials.value = [
+        ...approvedCredentials.value,
+        { ...credential, status: 'approved' },
+      ];
+      pendingCredentials.value = pendingCredentials.value.filter(
+        (item) => item.id !== credential.id
+      );
+    } else {
+      alert('Credential approval failed: ' + result.message);
+    }
+  } catch (error) {
+    console.error('Error approving credential:', error);
+    alert('An error occurred while approving the credential.');
   }
 };
 
-const rejectCredential = (credential: any) => {
-  // Set up the selected credential for rejection
-  selectedCredential.value = credential;
-  actionType.value = 'reject';
-  modalTitle.value = 'Reject Credential';
-  modalMessage.value = `Are you sure you want to reject "${credential.name}"?`;
 
-  // Open the confirmation modal
-  if (confirmationModal.value) {
-    confirmationModal.value.isVisible = true;
+
+const rejectCredential = async (credential: any) => {
+  try {
+    // Simulate using a backend function to reject the credential
+    const result = await Registry.rejectReq(credential, 'verifier-address-placeholder');
+    if (result.success) {
+      alert('Credential rejected successfully.');
+      // Remove the credential from the pending list
+      pendingCredentials.value = pendingCredentials.value.filter(
+        (item) => item.id !== credential.id
+      );
+    } else {
+      alert('Credential rejection failed: ' + result.message);
+    }
+  } catch (error) {
+    console.error('Error rejecting credential:', error);
+    alert('An error occurred while rejecting the credential.');
   }
 };
+
 
 
 const handleConfirm = () => {
@@ -247,7 +282,7 @@ const handleConfirm = () => {
 };
 
     const showImportModal = ref(false);
-    const importedCredential = ref('');
+    const importedCredential = ref<{ name: string } | null>(null);
     const passphrase = ref('');
     const modalTitle = ref('');
     const modalMessage = ref('');
@@ -289,3 +324,11 @@ const openConfirmModal = (action: string, credential: any) => {ref(null); // Ref
   },
 });
 </script>
+
+<style scoped>
+.custom-container {
+  max-width: 100%; /* Override Bootstrap's default max-width */
+  width: 100%;
+}
+
+</style>
