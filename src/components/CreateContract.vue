@@ -193,6 +193,9 @@ export default defineComponent({
           issuingBodyDomain.value
         );
         localStorage.setItem(`${keyPair.publicKey}_${keyPair.privateKey}`, JSON.stringify({ addr: issuingBodyAddr, name: issuingBodyName.value, domain: issuingBodyDomain.value }));
+      } else {
+        issuingBodyAddr = JSON.parse(issuingBodyAddr).addr;
+        if (!issuingBodyAddr) return;
       }
 
       issuingBody.value = new IssuingBodyClient(keyPair, issuingBodyAddr);
@@ -262,6 +265,10 @@ export default defineComponent({
       if (!newCred?.address) return;
 
       credentialGrantees.value.push({ name: credential.value.name, granteeName: recipient.value, address: newCred?.address, credentialAddr: credential.value.address, expiry: expiration.value });
+
+      expiration.value = undefined;
+      recipient.value = "";
+      credential.value = { name: "", address: "", issuingBodyAddr: "", id: -1 };
     };
 
     const createCredentialType = async () => {
@@ -272,6 +279,8 @@ export default defineComponent({
       const credAddress = await issuingBody.value.getCredById(credId);
 
       ownedCreds.value.push({ name: credentialType.value, issuingBodyAddr: issuingBody.value?.address, id: credId, address: credAddress.address });
+
+      credentialType.value = "";
     };
 
     return {
