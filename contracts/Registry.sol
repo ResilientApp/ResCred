@@ -4,7 +4,7 @@ pragma solidity ^0.8.27;
 import {StructuredLinkedList} from "../node_modules/solidity-linked-list/contracts/StructuredLinkedList.sol";
 
 contract IssuingBody {
-    address public registry;
+    Registry public registry;
     uint public id;
 
     string public name;
@@ -15,25 +15,27 @@ contract IssuingBody {
     mapping(uint => Credential) credentials;
 
     constructor(
+        Registry _registry,
         string memory _name,
-        uint _id,
-        string memory _domain,
-        address _owner
+        string memory _domain
     ) {
-        registry = msg.sender;
-        id = _id;
-
+        registry = _registry;
         name = _name;
         domain = _domain;
-        // Can't use msg.sender since Registry contract is the caller
-        owner = _owner;
-        nextId = 1;
+        owner = msg.sender;
+    }
+
+    function setId(uint _id) public {
+        require(address(registry) == msg.sender);
+        id = _id;
     }
 
     function addCredential(Credential cred) public returns (uint) {
-        require(msg.sender == registry, "Expected caller to be Registry");
+        require(msg.sender == owner);
+        require(cred.issuingBody() == this);
         credentials[nextId] = cred;
         uint credId = nextId;
+        cred.setId(nextId);
         nextId++;
         return credId;
     }
@@ -60,35 +62,43 @@ contract CredentialGrant {
     string public name;
     uint public expiry;
 
-    address public registry;
-    address public issuingBody;
-    address public credential;
+    Registry public registry;
+    IssuingBody public issuingBody;
+    Credential public credential;
 
     constructor(
-        uint _id,
+        Credential _credential,
         address _grantee,
         string memory _name,
-        uint _expiry,
-        Registry _registry,
-        IssuingBody _issuingBody,
-        Credential _credential
+        uint _expiry
     ) {
-        require(
-            msg.sender == address(_credential),
-            "Credential grant must be created by Credential"
-        );
-        id = _id;
+        credential = _credential;
+        issuingBody = _credential.issuingBody();
+        registry = issuingBody.registry();
+        require(msg.sender == issuingBody.owner());
         grantee = _grantee;
         name = _name;
         expiry = _expiry;
-        registry = address(_registry);
-        issuingBody = address(_issuingBody);
-        credential = address(_credential);
         pendingRequests.pushFront(0);
     }
 
+    function setId(uint _id) public {
+        require(msg.sender == address(credential));
+        id = _id;
+    }
+
+    function checkPerms() private view {
+        require(
+            msg.sender == address(registry) ||
+                msg.sender == address(issuingBody) ||
+                msg.sender == issuingBody.owner() ||
+                msg.sender == address(credential) ||
+                msg.sender == grantee
+        );
+    }
+
     function getReqIds() public view returns (uint[] memory) {
-        require(msg.sender == grantee);
+        checkPerms();
         uint size = pendingRequests.sizeOf();
 
         uint[] memory reqIds = new uint[](size - 1);
@@ -103,39 +113,43 @@ contract CredentialGrant {
     }
 
     function getNumReqs() public view returns (uint) {
-        require(msg.sender == registry);
+        checkPerms();
         return pendingRequests.sizeOf();
     }
 
+    function hasReq() public view returns (bool) {
+        checkPerms();
+        return pendingRequests.sizeOf() > 0;
+    }
+
+    function getReq() public view returns (uint) {
+        checkPerms();
+        (bool exists, uint value) = pendingRequests.getNextNode(0);
+        return value;
+    }
+
     function getNextReq(uint node) public view returns (bool, uint) {
-        require(msg.sender == registry);
+        checkPerms();
         return pendingRequests.getNextNode(node);
     }
 
     function addReqId(uint reqId) public {
-        require(msg.sender == registry);
+        checkPerms();
         pendingRequests.pushBack(reqId);
     }
 
     function removeReqId(uint reqId) public {
-        require(msg.sender == registry);
+        checkPerms();
         pendingRequests.remove(reqId);
     }
 }
 
 contract Credential {
-    struct HolderMetadata {
-        bool granted;
-        uint256 expiry; // 0 for never expire
-        mapping(address => bool) requests;
-    }
-
     uint public id;
     string public name;
-    uint256 public verifyTimeout;
-    uint256 public expiry;
-    address public registry;
-    address public issuingBody;
+    uint public expiry;
+    Registry public registry;
+    IssuingBody public issuingBody;
 
     uint public nextGrantId;
 
@@ -143,19 +157,17 @@ contract Credential {
     mapping(uint => CredentialGrant) grantById; //
 
     // Set _expiry to 0 for never expire
-    constructor(
-        string memory _name,
-        uint _id,
-        Registry _registry,
-        IssuingBody _body,
-        uint256 _expiry
-    ) {
+    constructor(IssuingBody _body, string memory _name, uint256 _expiry) {
         name = _name;
-        issuingBody = address(_body);
-        registry = address(_registry);
+        issuingBody = _body;
+        registry = _body.registry();
         expiry = _expiry;
-        id = _id;
         nextGrantId = 1;
+    }
+
+    function setId(uint _id) public {
+        require(msg.sender == address(issuingBody));
+        id = _id;
     }
 
     function getCredGrants() public view returns (CredentialGrant[] memory) {
@@ -166,7 +178,8 @@ contract Credential {
         return creds;
     }
 
-    function addGrant(CredentialGrant credGrant) private returns (uint) {
+    function addGrant(CredentialGrant credGrant) public returns (uint) {
+        require(msg.sender == address(issuingBody.owner()));
         grantByOwner[credGrant.grantee()] = credGrant;
         grantById[nextGrantId] = credGrant;
         uint grantId = nextGrantId;
@@ -174,25 +187,25 @@ contract Credential {
         return grantId;
     }
 
-    function grant(
-        address grantee,
-        string calldata granteeName
-    ) public returns (bool) {
-        if (msg.sender != registry) return false;
-        uint credExpiry = 0;
-        if (expiry != 0) credExpiry = block.timestamp + expiry;
-        CredentialGrant credGrant = new CredentialGrant(
-            nextGrantId,
-            grantee,
-            granteeName,
-            credExpiry,
-            Registry(registry),
-            IssuingBody(issuingBody),
-            this
-        );
-        addGrant(credGrant);
-        return true;
-    }
+    // function grant(
+    //     address grantee,
+    //     string calldata granteeName
+    // ) public returns (bool) {
+    //     if (msg.sender != registry) return false;
+    //     uint credExpiry = 0;
+    //     if (expiry != 0) credExpiry = block.timestamp + expiry;
+    //     CredentialGrant credGrant = new CredentialGrant(
+    //         nextGrantId,
+    //         grantee,
+    //         granteeName,
+    //         credExpiry,
+    //         Registry(registry),
+    //         IssuingBody(issuingBody),
+    //         this
+    //     );
+    //     addGrant(credGrant);
+    //     return true;
+    // }
 }
 
 enum VerifyRequestStatus {
@@ -203,20 +216,26 @@ enum VerifyRequestStatus {
 
 contract VerifyRequest {
     uint public id;
+    Registry public registry;
     Verifier public verifier;
     CredentialGrant public credGrant;
     VerifyRequestStatus public status;
 
-    constructor(uint _id, Verifier _verifier, CredentialGrant _credGrant) {
-        require(msg.sender == _verifier.registry());
-        id = _id;
+    constructor(Verifier _verifier, CredentialGrant _credGrant) {
+        require(msg.sender == _verifier.owner());
         verifier = _verifier;
         credGrant = _credGrant;
+        registry = _verifier.registry();
         status = VerifyRequestStatus.PENDING;
     }
 
+    function setId(uint _id) public {
+        require(msg.sender == address(registry));
+        id = _id;
+    }
+
     function setStatus(VerifyRequestStatus _status) public returns (bool) {
-        require(msg.sender == verifier.registry());
+        require(msg.sender == address(verifier.registry()));
         require(
             status == VerifyRequestStatus.PENDING,
             "Status can only be set once"
@@ -231,39 +250,47 @@ contract Verifier {
     string public name;
     string public domain;
     address public owner;
-    address public registry;
+    Registry public registry;
 
     mapping(uint => VerifyRequest) requests;
     uint public nextReqIdx; // different from request ID!
 
     constructor(
-        uint _id,
+        Registry _registry,
         string memory _name,
-        string memory _domain,
-        address _owner
+        string memory _domain
     ) {
-        id = _id;
+        registry = _registry;
         name = _name;
         domain = _domain;
-        owner = _owner;
-        registry = msg.sender;
+        owner = msg.sender;
         nextReqIdx = 0;
     }
 
+    function setId(uint _id) public {
+        require(msg.sender == address(registry));
+        id = _id;
+    }
+
     function addReq(VerifyRequest req) public {
-        require(msg.sender == registry);
+        require(
+            msg.sender == address(registry) || msg.sender == address(owner)
+        );
         requests[nextReqIdx] = req;
         nextReqIdx++;
     }
 
     function getReqByIdx(uint idx) public view returns (VerifyRequest) {
-        require(msg.sender == registry);
+        require(
+            msg.sender == address(registry) || msg.sender == address(owner)
+        );
         return requests[idx];
     }
 
     function getVerifyReqs() public view returns (VerifyRequest[] memory) {
-        require(msg.sender == registry);
-
+        require(
+            msg.sender == address(registry) || msg.sender == address(owner)
+        );
         VerifyRequest[] memory reqs = new VerifyRequest[](nextReqIdx);
         for (uint i = 0; i < nextReqIdx; i++) {
             reqs[i] = requests[i];
@@ -274,7 +301,7 @@ contract Verifier {
 
 // The Registry records all issuing bodies
 contract Registry {
-    address owner;
+    address public owner;
 
     // Owner address to issuing body
     mapping(address => IssuingBody) ibByCreator;
@@ -298,38 +325,22 @@ contract Registry {
     // === ISSUING BODY ===
 
     function registerIssuingBody(
-        string calldata name,
-        string calldata domain
+        IssuingBody body
     ) public returns (IssuingBody) {
         require(address(ibByCreator[msg.sender]) == address(0));
-        IssuingBody body = new IssuingBody(name, nextIbId, domain, msg.sender);
+        body.setId(nextIbId);
         ibByCreator[msg.sender] = body;
         ibById[nextIbId] = body;
         nextIbId++;
         return body;
     }
 
-    function createCredential(
-        string calldata name,
-        uint expiry
-    ) public returns (Credential) {
-        require(
-            ibByCreator[msg.sender].id() != 0,
-            "Registered issuing body expected."
-        );
-        Credential cred = new Credential(
-            name,
-            nextIbId,
-            this,
-            ibByCreator[msg.sender],
-            expiry
-        );
-        ibByCreator[msg.sender].addCredential(cred);
-        return cred;
-    }
-
     function getIssuingBody() public view returns (IssuingBody) {
         return ibByCreator[msg.sender];
+    }
+
+    function getIssuingBodyById(uint ibId) public view returns (IssuingBody) {
+        return ibById[ibId];
     }
 
     function getCredentials() public view returns (Credential[] memory) {
@@ -342,20 +353,6 @@ contract Registry {
             creds[i - 1] = ib.getCredentialById(i);
         }
         return creds;
-    }
-
-    function grantCredential(
-        Credential cred,
-        address grantee,
-        string calldata granteeName
-    ) public returns (bool) {
-        require(
-            ibByCreator[msg.sender].id() != 0,
-            "Registered issuing body expected."
-        );
-        require(address(this) == cred.registry());
-        require(address(ibByCreator[msg.sender]) == cred.issuingBody());
-        return cred.grant(grantee, granteeName);
     }
 
     // === CREDENTIAL OWNER ===
@@ -410,29 +407,33 @@ contract Registry {
 
     // === VERIFIER ===
 
-    function registerVerifier(
-        string calldata name,
-        string calldata domain
-    ) public returns (Verifier) {
+    function registerVerifier(Verifier verifier) public returns (Verifier) {
         require(address(verifierByCreator[msg.sender]) == address(0));
-        Verifier verifier = new Verifier(nextIbId, name, domain, msg.sender);
+        require(verifier.registry() == this);
+        verifier.setId(nextVerifierId);
         verifierByCreator[msg.sender] = verifier;
         verifierById[nextVerifierId] = verifier;
         nextVerifierId++;
         return verifier;
     }
 
+    function getVerifierByCreator() public view returns (Verifier) {
+        return verifierByCreator[msg.sender];
+    }
+
     function sendVerifyReq(
-        CredentialGrant credGrant
-    ) public returns (VerifyRequest) {
+        CredentialGrant credGrant,
+        VerifyRequest req
+    ) public returns (uint) {
         Verifier verifier = verifierByCreator[msg.sender];
         require(verifier.id() != 0);
-        VerifyRequest req = new VerifyRequest(nextReqId, verifier, credGrant);
+        // VerifyRequest req = new VerifyRequest(nextReqId, verifier, credGrant);
+        req.setId(nextReqId);
         credGrant.addReqId(nextReqId);
         nextReqId++;
         requests[req.id()] = req;
         verifier.addReq(req);
-        return req;
+        return req.id();
     }
 
     function getVerifierVerifyReqs()
