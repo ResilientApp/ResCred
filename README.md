@@ -1,5 +1,28 @@
-# Vue 3 + TypeScript + Vite
+# ResCred
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+Smart contract-based transparent certificate and credential issuance and verification tooling.
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+## Get Started
+
+```sh
+cd $HOME
+git clone https://github.com/apache/incubator-resilientdb resilientdb
+git clone https://github.com/ResilientApp/ResCred
+cat <<'EOF' >>~/.bashrc
+export ResDB_Home=$HOME/resilientdb
+export REPO=ResCred
+export CONFIG_PATH=${ResDB_HOME:-$HOME/resilientdb}/service/tools/config/interface/service.config
+export REPO_PATH=$HOME/$REPO
+export OUTPUT_PATH=$REPO_PATH/output.json
+source $REPO_PATH/contracts/utils.sh
+EOF
+exec $SHELL
+
+# Start ResilientDB contract service
+ressvc
+
+# Run tests in a separate terminal
+test-approve
+test-reject
+test-immutable
+```
